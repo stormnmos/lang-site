@@ -1,0 +1,2 @@
+{:require [lang.app]
+ :init-fns [lang.app/run]}
