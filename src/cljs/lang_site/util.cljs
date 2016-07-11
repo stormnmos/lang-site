@@ -1,2 +1,2 @@
-(ns lang.util
+(ns lang-site.util
   (:require [clojure.string :refer [join]]))

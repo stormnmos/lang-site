@@ -1,4 +1,4 @@
-(ns lang.state)
+(ns lang-site.state)
 
 (def initial-state
   {:boards

@@ -1,4 +1,4 @@
-(ns lang.reconciler
+(ns lang-site.reconciler
   (:require [goog.object :as gobj]
             [om.next :as om]
             [lang.state :refer [initial-state]]))

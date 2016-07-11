@@ -1,4 +1,4 @@
-(ns lang.components.about
+(ns lang-site.components.about
   (:require [om.dom :as dom]))
 
 (defn about []

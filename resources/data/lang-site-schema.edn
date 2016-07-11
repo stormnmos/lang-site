@@ -1,0 +1,22 @@
+[
+ ;; Sentences
+ {:db/id #db/id[:db.part/db]
+  :db/ident :sentence/id
+  :db/valueType :db.type/long
+  :db/cardinality :db.cardinality/one
+  :db/doc "A sentences canonical ID"
+  :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident :sentence/language
+  :db/valueType :db.type/string
+  :db/cardinality :db.cardinality/one
+  :db/doc "A sentence's language"
+  :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident :sentence/text
+  :db/valueType :db.type/string
+  :db/cardinality :db.cardinality/one
+  :db/doc "A sentence's text"
+  :db.install/_attribute :db.part/db}]
