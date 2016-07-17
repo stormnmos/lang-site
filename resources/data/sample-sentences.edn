@@ -1,4 +1,0 @@
-[{:db/id #db/id[:db/part/user -1]
-  :sentence/id 1
-  :sentence/language "usa"
-  :sentence/text "Hello World"}]

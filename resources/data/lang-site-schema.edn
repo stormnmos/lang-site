@@ -4,12 +4,13 @@
   :db/ident :sentence/id
   :db/valueType :db.type/long
   :db/cardinality :db.cardinality/one
+  :db/unique :db.unique/identity
   :db/doc "A sentences canonical ID"
   :db.install/_attribute :db.part/db}
 
  {:db/id #db/id[:db.part/db]
   :db/ident :sentence/language
-  :db/valueType :db.type/string
+  :db/valueType :db.type/ref
   :db/cardinality :db.cardinality/one
   :db/doc "A sentence's language"
   :db.install/_attribute :db.part/db}
@@ -18,5 +19,25 @@
   :db/ident :sentence/text
   :db/valueType :db.type/string
   :db/cardinality :db.cardinality/one
+  :db/fulltext true
   :db/doc "A sentence's text"
+  :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/db]
+  :db/ident :language/code
+  :db/valueType :db.type/ref
+  :db/cardinality :db.cardinality/one
+  :db/doc "A language code enum value"
+  :db.install/_attribute :db.part/db}
+
+ ;; Language enum values
+ [:db/add #db/id[:db.part/user] :db/ident :sentence.language/eng]
+ [:db/add #db/id[:db.part/user] :db/ident :sentence.language/tur]
+
+ ;; translation group
+ {:db/id #db/id[:db.part/db]
+  :db/ident :translation/group
+  :db/valueType :db.type/ref
+  :db/cardinality :db.cardinality/many
+  :db/doc "Ties together translation sentences"
   :db.install/_attribute :db.part/db}]

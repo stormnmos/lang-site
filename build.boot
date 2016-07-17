@@ -9,6 +9,7 @@
          (merge {:url "https://my.datomic.com/repo"}
                 (:datomic (gpg-decrypt
                            (File. (boot.App/bootdir) "credentials.edn.gpg"))))]))
+
 (set-env!
  :source-paths #{"less" "src/clj" "src/cljc" "src/cljs"}
  :resource-paths #{"html" "resources"}
@@ -34,6 +35,7 @@
                  [com.datomic/datomic-pro "0.9.5372"]
                  [com.couchbase.client/couchbase-client "1.3.2"]
                  [io.netty/netty "3.6.3.Final"]])
+
 (task-options!
  pom {:project "lang-site"
       :version "0.1.0-SNAPSHOT"})
@@ -51,7 +53,6 @@
    (watch)
    (speak)
    (reload)
-
    (less)
    (cljs :source-map true
          :optimizations :none
