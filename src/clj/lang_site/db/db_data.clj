@@ -24,7 +24,7 @@
 
 (def conn (d/connect uri))
 
-#_(def rdr-s (clojure.java.io/reader "resources/data/sentences.csv"))
+(def rdr-s (clojure.java.io/reader "resources/data/sentences.csv"))
 
 (def rdr-l (clojure.java.io/reader "resources/data/links.csv"))
 
@@ -45,8 +45,10 @@
    :sentence/translation translation-id})
 
 (defn links-template [[sentence-id translation-id]]
-  {:db/id #db/id[:db.part/user]
-   :translation/group [sentence-id translation-id]})
+  {:type :link
+   :tx
+   {:db/id #db/id[:db.part/user]
+    :translation/group [sentence-id translation-id]}})
 
 (defn link-to-datomic [line]
   (let [vals (str/split line #"\t")
@@ -57,12 +59,14 @@
           (put! events)))))
 
 (defn sentence-template [[id lang text]]
-  {:db/id #db/id[:db.part/user] :sentence/id (read-string id)
-   :sentence/language
-   (cond
-     (= "eng" lang) :sentence.language/eng
-     (= "tur" lang) :sentence.language/tur)
-   :sentence/text text})
+  {:type :sentence
+   :tx
+   {:db/id #db/id[:db.part/user] :sentence/id (read-string id)
+    :sentence/language
+    (cond
+      (= "eng" lang) :sentence.language/eng
+      (= "tur" lang) :sentence.language/tur)
+    :sentence/text text}})
 
 (defn sentence-to-datomic [sent]
   (as-> sent s
@@ -70,7 +74,26 @@
     (sentence-template s)
     (put! events s)))
 
+(defmulti ingest
+  "Ingest a transaction into Datomic DB"
+  :type)
+
+(defmethod ingest :sentence [{{lang :sentence/language :as tx} :tx}]
+  (if (or (= lang :sentence.language/eng) ; only support tur and english
+          (= lang :sentence.language/tur))
+    (d/transact conn [tx])))
+
+(defmethod ingest :link [{{group :translation/group :as tx} :tx}]
+  (if-not (some true?
+                (d/pull-many (d/db conn) [:translation_/group] tx))
+    (d/transact conn [tx])))
+
 (async/go
+  (while trueq
+    (let [tx (<! events)]q
+      (ingest tx))))
+
+#_(async/go
   (while true
     (let [tx (<! events)]
       (if (or (= (:sentence/language tx) :sentence.language/eng)
