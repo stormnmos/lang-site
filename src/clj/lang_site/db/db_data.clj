@@ -53,10 +53,11 @@
 (defn link-to-datomic [line]
   (let [vals (str/split line #"\t")
         ids  (find-translation-pair (d/db conn) vals)]
-    (if (= (count ids) 2)
+    (if (= (count (get-in ids [:tx :translation/group])) 2)
       (->> ids
-          (links-template)
-          (put! events)))))
+           (links-template)
+           (put! events)))))
+
 
 (defn sentence-template [[id lang text]]
   {:type :sentence
@@ -89,8 +90,8 @@
     (d/transact conn [tx])))
 
 (async/go
-  (while trueq
-    (let [tx (<! events)]q
+  (while true
+    (let [tx (<! events)]
       (ingest tx))))
 
 #_(async/go
