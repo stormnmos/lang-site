@@ -24,6 +24,14 @@
   :db.install/_attribute :db.part/db}
 
  {:db/id #db/id[:db.part/db]
+  :db/ident :sentece/group
+  :db/valueType :db.type/uuid
+  :db/cardinality :db.cardinality/one
+  :db/doc "A sentence translation group, all with the same squuid"
+  :db/index true
+  :db.install/_attribute :db.part/db}
+
+ {:db/id #db/id[:db.part/db]
   :db/ident :language/code
   :db/valueType :db.type/ref
   :db/cardinality :db.cardinality/one
@@ -32,12 +40,5 @@
 
  ;; Language enum values
  [:db/add #db/id[:db.part/user] :db/ident :sentence.language/eng]
- [:db/add #db/id[:db.part/user] :db/ident :sentence.language/tur]
-
- ;; translation group
- {:db/id #db/id[:db.part/db]
-  :db/ident :translation/group
-  :db/valueType :db.type/ref
-  :db/cardinality :db.cardinality/many
-  :db/doc "Ties together translation sentences"
-  :db.install/_attribute :db.part/db}]
+ [:db/add #db/id[:db.part/user] :db/ident :sentence.language/esp]
+ [:db/add #db/id[:db.part/user] :db/ident :sentence.language/tur]]
