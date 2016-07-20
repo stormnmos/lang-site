@@ -2,16 +2,15 @@
   (:require [clojure-csv.core :as csv]
             [datomic.api :as d]
             [clojure.string :as str :only split]
-            [clojure.core.async :as async :refer [<! >! >!! put! take!]]))
+            [clojure.core.async :as async :refer [chan sliding-buffer <! >! <!! >!! put! take!]]))
 
 (defn split-by-tab [s]
   (str/split s #"\t"))
 
-(def events (async/chan 1000000))
+(def events (chan 1000000))
 
-(def event-bus (async/chan 1000))
-
-(def event-bus-pub (async/pub event-bus first))
+(def failed-response  (chan (sliding-buffer 1000)))
+(def success-response (chan (sliding-buffer 1000)))
 
 (defn send-msg [chan text]
   (async/put! chan [:send-msg text]))
@@ -27,11 +26,6 @@
   (d/create-database uri))
 
 (def conn (d/connect uri))
-
-(async/go
-  (while true
-    (let [tx (<! events)]
-      (ingest conn tx))))
 
 (def rdr-s (clojure.java.io/reader "resources/data/sentences.csv"))
 
@@ -106,12 +100,12 @@
   "Ingest a transaction into Datomic DB"
   :type)
 
-(defmethod validate-tx :sentence [conn {{lang :sentence/language :as tx} :tx}]
+(defmethod validate-tx :sentence [{{lang :sentence/language :as tx} :tx}]
   (if (or (= lang :sentence.language/eng) ; only support tur and english
           (= lang :sentence.language/tur))
     tx))
 
-(defmethod validate :link [conn {{group :translation/group :as tx} :tx}]
+(defmethod validate-tx :link [{{group :translation/group :as tx} :tx}]
   (if-not (some true?
                 (d/pull-many (d/db conn) [:translation_/group] tx))
     tx))
@@ -169,3 +163,11 @@
          :in $ ?sentence
          :where [?e :sentence/text ?sentence]]
        db sentence))
+
+(async/go
+  (while true
+    (let [unvalidated-tx (<! events)]
+      (if-let [tx (validate-tx unvalidated-tx) ]
+        (do (d/transact conn [tx])
+            (>! success-response tx))
+        (>! failed-response unvalidated-tx)))))
