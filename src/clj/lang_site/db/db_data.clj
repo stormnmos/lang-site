@@ -2,7 +2,10 @@
   (:require [clojure-csv.core :as csv]
             [datomic.api :as d]
             [clojure.string :as str :only split]
-            [clojure.core.async :as async :refer [chan sliding-buffer <! >! <!! >!! put! take!]]))
+            [clojure.core.async
+             :as async :refer [chan sliding-buffer
+                               <! >! <!!
+                               >!! put! take!]]))
 
 (defn split-by-tab [s]
   (str/split s #"\t"))
@@ -73,11 +76,6 @@
       (->> eids
            (links-template)
            (put! events)))))
-
-(defn get-links [db]
-  (keep identity
-        (map (comp #(find-translation-pair db %) split-by-tab)
-             (line-seq rdr-l))))
 
 (defn sentence-template [[id lang text]]
   {:type :sentence
