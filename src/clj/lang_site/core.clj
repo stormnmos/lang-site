@@ -10,7 +10,6 @@
    :headers {"Content-Type" "application/edn"}
    :body (pr-str data)})
 
-
 #_(defroutes routes
   (GET "/" [] (index))
   (GET "/classes" [] (classes))
