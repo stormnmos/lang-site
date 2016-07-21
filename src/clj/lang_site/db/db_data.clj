@@ -55,10 +55,11 @@
 
 (defn links-template [eids]
   (let [squuid (d/squuid)]
-    (mapv (fn [eid]
-            {:db/id eid
-             :sentence/group squuid})
-          eids)))
+    {:type :link
+     :tx (mapv (fn [eid]
+                 {:db/id eid
+                  :sentence/group squuid})
+               eids)}))
 
 (defn process-link-line [db line]
   (->> line
@@ -103,8 +104,8 @@
           (= lang :sentence.language/tur))
     tx))
 
-(defmethod validate-tx :link [_]
-  true)
+(defmethod validate-tx :link [{tx :tx}]
+  tx)
 
 (defn process-transactions [conn]
   (async/go
@@ -159,6 +160,12 @@
          :in $ ?sentence
          :where [?e :sentence/text ?sentence]]
        db sentence))
+
+(defn transact-links []
+  (run! #(link-to-datomic db %) (line-seq rdr-l)))
+
+(defn transact-sentences []
+  (run! sentence-to-datomic (line-seq rdr-s)))
 
 (async/go
   (while true
