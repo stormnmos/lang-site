@@ -7,10 +7,10 @@
 (defn split-by-tab [s]
   (str/split s #"\t"))
 
-(def events (chan 1000000))
+(def events (chan 100000))
 
-(def failed-response  (chan (sliding-buffer 1000)))
-(def success-response (chan (sliding-buffer 1000)))
+(def failed-response  (chan (sliding-buffer 10)))
+(def success-response (chan (sliding-buffer 10)))
 
 (defn send-msg [chan text]
   (async/put! chan [:send-msg text]))
@@ -26,6 +26,7 @@
   (d/create-database uri))
 
 (def conn (d/connect uri))
+(def db (d/db conn))
 
 (def rdr-s (clojure.java.io/reader "resources/data/sentences.csv"))
 
@@ -36,42 +37,39 @@
 (defn load-schema [conn]
   @(d/transact conn schema-tx))
 
-(comment (d/transact
-          conn
-          (take 100000
-                (map :tx
-                     (map links-template
-                          (keep identity
-                                (map
-                                 (comp #(find-translation-pair (d/db conn) %)
-                                       split-by-tab)
-                                 (line-seq rdr-l))))))))
+(defn pba-e [db att v]
+  "Pull by attribute, entity"
+  (d/q '[:find ?e .
+         :in $ ?att ?v
+         :where [?e ?att ?v ]]
+       db att v))
 
-#_ (defn read-links
-     (let f (comp #(map tx %)
-                  #(map links-template %)
-                  #(keep identity %)
-                  #(map
-                    (comp)))))
+(defn pull-by-sentence-id [db s-id]
+  (d/q '[:find [(pull ?e [:db/id :sentence/group])]
+         :in $ ?v
+         :where [?e :sentence/id ?v]]
+       db s-id))
 
-(defn find-translation-pair [db [s-id t-id]]
-  (d/q '[:find [?e1 ?e2]
-         :in $ ?sentence-id ?translation-id
-         :where [?e1 :sentence/id ?sentence-id]
-                [?e2 :sentence/id ?translation-id]]
-       db  (read-string s-id) (read-string t-id)))
+(defn sentence-ids->db-ids [db ids]
+  (map #(pba-e db :sentence/id (read-string %)) ids))
 
-(defn links-template [[sentence-id translation-id]]
-  {:type :link
-   :tx
-   {:db/id #db/id[:db.part/user]
-    :translation/group [sentence-id translation-id]}})
+(defn links-template [eids]
+  (let [squuid (d/squuid)]
+    (mapv (fn [eid]
+            {:db/id eid
+             :sentence/group squuid})
+          eids)))
+
+(defn process-link-line [db line]
+  (->> line
+       (split-by-tab)
+       (sentence-ids->db-ids db)
+       (filter int?)))
 
 (defn link-to-datomic [db line]
-  (let [vals (split-by-tab line)
-        ids  (find-translation-pair db vals)]
-    (if (= (count ids) 2)
-      (->> ids
+  (let [eids (process-link-line db line)]
+    (if (>= (count eids) 2)
+      (->> eids
            (links-template)
            (put! events)))))
 
@@ -83,12 +81,12 @@
 (defn sentence-template [[id lang text]]
   {:type :sentence
    :tx
-   {:db/id #db/id[:db.part/user] :sentence/id (read-string id)
-    :sentence/language
-    (cond
-      (= "eng" lang) :sentence.language/eng
-      (= "tur" lang) :sentence.language/tur)
-    :sentence/text text}})
+   [{:db/id #db/id[:db.part/user] :sentence/id (read-string id)
+     :sentence/language
+     (cond
+       (= "eng" lang) :sentence.language/eng
+       (= "tur" lang) :sentence.language/tur)
+     :sentence/text text}]})
 
 (defn sentence-to-datomic [sent]
   (->> sent
@@ -105,10 +103,8 @@
           (= lang :sentence.language/tur))
     tx))
 
-(defmethod validate-tx :link [{{group :translation/group :as tx} :tx}]
-  (if-not (some true?
-                (d/pull-many (d/db conn) [:translation_/group] tx))
-    tx))
+(defmethod validate-tx :link [_]
+  true)
 
 (defn process-transactions [conn]
   (async/go
@@ -168,6 +164,6 @@
   (while true
     (let [unvalidated-tx (<! events)]
       (if-let [tx (validate-tx unvalidated-tx) ]
-        (do (d/transact conn [tx])
+        (do (d/transact conn tx)
             (>! success-response tx))
         (>! failed-response unvalidated-tx)))))
