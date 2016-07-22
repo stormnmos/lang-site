@@ -29,9 +29,9 @@
 (defn create-db-access-function [conn]
   (fn [] (d/db conn)))
 
-(def get-db (create-db-access-funtion (create-db-connection uri)))
+(def get-db (create-db-access-function (create-db-connection uri)))
 
-(def conn (create-db-conn uri))
+(def conn (d/connect uri))
 
 (defmulti validate-tx
   "Ingest a transaction into Datomic DB"
@@ -47,7 +47,7 @@
 
 (async/go
   (while true
-    (let [unvalidated-tx (<! events)]
+    (let [unvalidated-tx (<! transactions)]
       (if-let [tx (validate-tx unvalidated-tx) ]
         (do (d/transact conn tx)
             (>! success-response tx))

@@ -1,7 +1,7 @@
 (ns lang-site.db.db-data
   (:require
-   [lang-site.db.db :as lsdb]
    [lang-site.db.transaction-templates :as tt]
+   [lang-site.db.queries :as q]
    [datomic.api :as d]
    [clojure.string :as str :only split]
    [clojure.core.async
@@ -19,7 +19,7 @@
 (def rdr-l (clojure.java.io/reader "resources/data/links.csv"))
 
 (defn sentence-ids->db-ids [db ids]
-  (map #(pba-e db :sentence/id (read-string %)) ids))
+  (map #(q/pba-e db :sentence/id (read-string %)) ids))
 
 (defn process-link-line [db line]
   (->> line
@@ -27,20 +27,20 @@
        (sentence-ids->db-ids db)
        (filter int?)))
 
-(defn link-to-datomic [db line]
+(defn link-to-datomic [db tx-chan line]
   (let [eids (process-link-line db line)]
     (if (>= (count eids) 2)
       (->> eids
            (tt/links-template)
-           (put! (lsdb/get-transaction-channel))))))
+           (put! tx-chan)))))
 
-(defn sentence-to-datomic [sent]
-  (->> sent
+(defn sentence-to-datomic [tx-chan line]
+  (->> line
        (split-by-tab)
        (tt/sentence-template)
-       (put! (lsdb/get-transaction-channel))))
+       (put! tx-chan)))
 
-(defn transact-links []
+(defn transact-links [db]
   (run! #(link-to-datomic db %) (line-seq rdr-l)))
 
 (defn transact-sentences []
