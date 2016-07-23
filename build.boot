@@ -30,6 +30,7 @@
                  [sablono "0.7.2"]
                  [enfocus  "2.1.1"]
                  [om-sync "0.1.1"]
+                 [datascript "0.15.2"]
                  ;; Server Side Requirements
                  [ring "1.5.0"]
                  [compojure "1.5.1"]
@@ -48,31 +49,30 @@
 
 (task-options!
  pom {:project "lang-site"
-      :version "0.1.0-SNAPSHOT"}
+      :version "0.1.1"}
  environ {:env {:database-url
                 "datomic:couchbase://localhost:4334/datomic/lang-site/?password=password"
                 :schema-file "resources/data/lang-site-schema.edn"
                 :sentence-file "resources/data/sentences.csv"
                 :links-file "resources/data/links.csv"}})
 
-(def +version+ "0.1.0")
+(def +version+ "0.1.1")
 
 (deftask run
   []
   (comp
-   (watch)
    (environ)
+   (watch)
    (speak)
    (reload)
    (less)
    (cljs :source-map true
          :optimizations :none
          :compiler-options {:devcards true})
-   (serve :dir "target"
-          :httpkit true
-          :nrepl {:port 3001}
-          :handler 'lang-site.core/handler
-          :reload true)))
+   (serve :httpkit true
+          #_ #_ :handler 'lang-site.core/handler
+          :reload true)
+   (repl :server true)))
 
 (deftask release
   []

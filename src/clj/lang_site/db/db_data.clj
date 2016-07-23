@@ -3,6 +3,7 @@
    [lang-site.db.transaction-templates :as tt]
    [lang-site.db.queries :as q]
    [datomic.api :as d]
+   [environ.core :refer [env]]
    [clojure.string :as str :only split]
    [clojure.core.async
     :as async :refer [chan sliding-buffer
@@ -16,8 +17,8 @@
 (defn create-lang-db [uri]
   (d/create-database uri))
 
-(def rdr-s (clojure.java.io/reader "resources/data/sentences.csv"))
-(def rdr-l (clojure.java.io/reader "resources/data/links.csv"))
+(def rdr-s (clojure.java.io/reader (env :sentence-file)))
+(def rdr-l (clojure.java.io/reader (env :links-file)))
 
 (defn sentence-ids->db-ids [db ids]
   (map #(q/pba-e db :sentence/id (read-string %)) ids))

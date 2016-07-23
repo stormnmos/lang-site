@@ -4,6 +4,7 @@
    [lang-site.db.queries :as q]
    [lang-site.db.transaction-templates :as tt]
    [datomic.api :as d]
+   [environ.core :refer [env]]
    [clojure.core.async
     :as async :refer [chan sliding-buffer
                       <! >! <!!
@@ -17,7 +18,7 @@
 (def failed-response  (chan (sliding-buffer 10)))
 (def success-response (chan (sliding-buffer 10)))
 
-(def uri "datomic:couchbase://localhost:4334/datomic/lang-site/?password=password")
+(def uri (env :database-url))
 #_(def schema-tx (read-string (slurp "resources/data/lang-site-schema.edn")))
 
 (defn load-schema [conn schema-tx]

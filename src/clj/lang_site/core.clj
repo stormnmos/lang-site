@@ -4,8 +4,11 @@
             [compojure.handler :as handler]
             [clojure.edn :as edn]
             [datomic.api :as d]
+            [environ.core :refer [env]]
             [lang-site.db.db :as db]
             [lang-site.db.queries :as q]))
+
+(def conn (d/connect (env :database-url)))
 
 (defn generate-response [data & [status]]
   {:status (or status 200)
@@ -13,17 +16,9 @@
    :body (pr-str data)})
 
 (defroutes routes
-  (GET "/translation-group" [] (q/))
+  (GET "/translation-group" [] (q/pull-translation-pair (d/db conn)))
   (route/files "/" {:root "html"})
   (route/not-found "<h1>Page not found</h1>"))
 
-#_(defn parse-edn-body [handler]
-  (fn [request]
-    (handler (if-let [body (:body request)]
-               (assoc request
-                      :edn-body (read-inputstream-edn body))
-               request))))
-
 (def handler
-  (-> routes
-      parse-edn-body))
+   routes)
