@@ -18,6 +18,8 @@
                  [adzerk/boot-reload "0.4.11"]
                  [deraen/boot-less "0.5.0"]
                  [pandeiro/boot-http "0.7.3"]
+                 [environ "1.0.3"]
+                 [boot-environ "1.0.3"]
                  ;;  Clojure and Clojurescript Dependencies
                  [org.clojure/clojure "1.9.0-alpha8"]
                  [org.clojure/clojurescript "1.9.93"]
@@ -38,14 +40,20 @@
                  [com.couchbase.client/couchbase-client "1.3.2"]
                  [io.netty/netty "3.6.3.Final"]])
 
-(task-options!
- pom {:project "lang-site"
-      :version "0.1.0-SNAPSHOT"})
-
 (require '[adzerk.boot-cljs :refer [cljs]]
          '[adzerk.boot-reload :refer [reload]]
          '[deraen.boot-less :refer [less]]
-         '[pandeiro.boot-http :refer [serve]])
+         '[pandeiro.boot-http :refer [serve]]
+         '[environ.boot :refer [environ]])
+
+(task-options!
+ pom {:project "lang-site"
+      :version "0.1.0-SNAPSHOT"}
+ environ {:env {:database-url
+                "datomic:couchbase://localhost:4334/datomic/lang-site/?password=password"
+                :schema-file "resources/data/lang-site-schema.edn"
+                :sentence-file "resources/data/sentences.csv"
+                :links-file "resources/data/links.csv"}})
 
 (def +version+ "0.1.0")
 
@@ -53,6 +61,7 @@
   []
   (comp
    (watch)
+   (environ)
    (speak)
    (reload)
    (less)
@@ -60,12 +69,16 @@
          :optimizations :none
          :compiler-options {:devcards true})
    (serve :dir "target"
-          :httpkit true)))
+          :httpkit true
+          :nrepl {:port 3001}
+          :handler 'lang-site.core/handler
+          :reload true)))
 
 (deftask release
   []
   (comp
    (watch)
+   (environ)
    (less :compression true)
    (cljs :optimizations :advanced
          :compiler-options {:devcards true})))
@@ -75,6 +88,7 @@
   (comp
    (watch)
    (reload)
+   (environ)
    (less :compression true)
    (cljs :optimizations :advanced
          :compiler-options {:devcards true})

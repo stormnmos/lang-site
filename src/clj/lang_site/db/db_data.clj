@@ -7,7 +7,8 @@
    [clojure.core.async
     :as async :refer [chan sliding-buffer
                       <! >! <!!
-                      >!! put! take!]]))
+                      >!! put! take!]]
+   [environ.core :refer [env]]))
 
 (defn split-by-tab [s]
   (str/split s #"\t"))

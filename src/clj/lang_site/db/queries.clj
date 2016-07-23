@@ -41,3 +41,24 @@
          :in $ ?sentence
          :where [?e :sentence/text ?sentence]]
        db sentence))
+
+(defn sample-language-groups [db n]
+  (d/q '{:find  [(sample 10 ?v)]
+         :in [$ ?n]
+         :where [[_ :sentence/group ?v]]}
+       db n))
+
+(defn sample-sentence-group-squuid [db]
+  (first (d/q '[:find (sample 1 ?val) .
+                :where [_ :sentence/group ?val]]
+              db)))
+
+(defn pull-translation-pair
+  ([db]
+   (pull-translation-pair db (sample-sentence-group-squuid db)))
+  ([db squuid]
+   (d/q '[:find ?sentence-text
+          :in $ ?squuid
+          :where [?e :sentence/group ?squuid]
+                 [?e :sentence/text  ?sentence-text]]
+        db squuid)))
