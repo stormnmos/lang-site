@@ -18,6 +18,7 @@
                  [adzerk/boot-reload "0.4.11"]
                  [deraen/boot-less "0.5.0"]
                  [pandeiro/boot-http "0.7.3"]
+                 ;; Environ Requirements
                  [environ "1.0.3"]
                  [boot-environ "1.0.3"]
                  ;;  Clojure and Clojurescript Dependencies
@@ -34,6 +35,7 @@
                  ;; Server Side Requirements
                  [ring "1.5.0"]
                  [compojure "1.5.1"]
+                 [com.stuartsierra/component "0.3.1"]
                  ;; Fix for boot-less
                  [org.slf4j/slf4j-nop "1.7.13" :scope "test"]
                  ;; Datomic requirements

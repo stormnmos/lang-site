@@ -6,7 +6,27 @@
             [datomic.api :as d]
             [environ.core :refer [env]]
             [lang-site.db.db :as db]
-            [lang-site.db.queries :as q]))
+            [lang-site.db.queries :as q]
+            [com.stuartsierra.component :as component]))
+
+(defrecord Database [url connection]
+  component/Lifecycle
+
+  (start [component]
+    (println ";; Starting database")
+    (let [conn (d/connect url)]
+      (assoc component :connection conn)))
+
+  (stop [component]
+    (println ";; Stopping database")
+    (assoc component :connection nil)))
+
+(defn new-database [url]
+  (map->Database {:url url}))
+
+(def comp (->> (env :database-url)
+                       (new-database)
+                       (component/start)))
 
 (def conn (d/connect (env :database-url)))
 
