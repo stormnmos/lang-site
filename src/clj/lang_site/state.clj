@@ -7,12 +7,12 @@
   component/Lifecycle
 
   (start [component]
-    (println ";; Starting database")
+    (println ";; Creating application state")
     (let [conn (d/connect url)]
       (assoc component :connection conn)))
 
   (stop [component]
-    (println ";; Stopping database")
+    (println ";; Destroying application state")
     (assoc component :connection nil)))
 
 (defn new-state [url tx-chan fail-chan success-chan]

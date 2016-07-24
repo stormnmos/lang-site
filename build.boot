@@ -32,10 +32,13 @@
                  [enfocus  "2.1.1"]
                  [om-sync "0.1.1"]
                  [datascript "0.15.2"]
+                 [com.taoensso/sente "1.10.0"]
                  ;; Server Side Requirements
                  [ring "1.5.0"]
                  [compojure "1.5.1"]
                  [com.stuartsierra/component "0.3.1"]
+                 ;; Client and Server
+                 [datascript-transit "0.2.1"]
                  ;; Fix for boot-less
                  [org.slf4j/slf4j-nop "1.7.13" :scope "test"]
                  ;; Datomic requirements
