@@ -3,13 +3,14 @@
             [compojure.route :as route]
             [compojure.handler :as handler]
             [clojure.edn :as edn]
+            [clojure.core.async :as async]
             [datomic.api :as d]
             [environ.core :refer [env]]
             [lang-site.db.db :as db]
             [lang-site.db.queries :as q]
             [com.stuartsierra.component :as component]))
 
-(defrecord Database [url connection]
+(defrecord State [url connection]
   component/Lifecycle
 
   (start [component]
@@ -21,14 +22,15 @@
     (println ";; Stopping database")
     (assoc component :connection nil)))
 
-(defn new-database [url]
-  (map->Database {:url url}))
+(defn new-state [url tx-chan fail-chan success-chan]
+  (map->State {:url url
+               :tx-chan tx-chan}))
 
-(def comp (->> (env :database-url)
-                       (new-database)
+(def state (->> (env :database-url)
+                (new-state (async/chan 100)
+                           (async/chan (async/sliding-buffer 10))
+                           (async/chan (async/sliding-buffer 10)))
                        (component/start)))
-
-(def conn (d/connect (env :database-url)))
 
 (defn generate-response [data & [status]]
   {:status (or status 200)
@@ -42,3 +44,14 @@
 
 (def handler
    routes)
+
+;;; Main handler for transacting into datomic
+
+(async/go
+  (while true
+    (let [{:keys [tx-chan fail-chan success-chan] state}
+          unvalidated-tx (<! tx-chan)]
+      (if-let [tx (validate-tx unvalidated-tx) ]
+        (do (d/transact conn tx)
+            (>! success-chan tx))
+        (>! fail-chan unvalidated-tx)))))

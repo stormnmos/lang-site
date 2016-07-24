@@ -1,64 +1,65 @@
 (ns lang-site.db.queries
-  (:require [datomic.api :as d]))
+  (:require [datomic.api :as d]
+            [lang-site.util :as u]))
 
-(defn pba-e [db att v]
+(defn pba-e [state att v]
   "Pull by attribute, entity"
   (d/q '[:find ?e .
          :in $ ?att ?v
          :where [?e ?att ?v ]]
-       db att v))
+       (u/get-db state) att v))
 
-(defn pull-by-sentence-id [db s-id]
+(defn pull-by-sentence-id [state s-id]
   (d/q '[:find [(pull ?e [:db/id :sentence/group])]
          :in $ ?v
          :where [?e :sentence/id ?v]]
-       db s-id))
+       (u/get-db state) s-id))
 
-(defn text-q [db search]
+(defn text-q [state search]
   (d/q '[:find ?e
          :in $ ?search
          :where [(fulltext $ :sentence/text ?search) [[?e]]]]
-       db search))
+       (u/get-db state) search))
 
-(defn find-links [db]
+(defn find-links [state]
   (d/q '[:find ?a
          :where [_ :translation/group ?a]]
-       db))
+       (u/get-db state)))
 
-(defn find-links-pull [db]
+(defn find-links-pull [state]
   (d/q '[:find (pull ?a [*])
          :where [_ :translation/group ?a]]
-       db))
+       (u/get-db state)))
 
-(defn find-fulltext [db search-string]
+(defn find-fulltext [state search-string]
   (d/q '[:find (pull ?e [*]) .
          :in $ ?search
          :where [(fulltext $ :sentence/text ?search) [[?e]]]]
-       db search-string))
+       (u/get-db state) search-string))
 
-(defn pull-by-sentence [db sentence]
+(defn pull-by-sentence [state sentence]
   (d/q '[:find (pull ?e [*]) .
          :in $ ?sentence
          :where [?e :sentence/text ?sentence]]
-       db sentence))
+       (u/get-db state) sentence))
 
-(defn sample-language-groups [db n]
+(defn sample-language-groups [state n]
   (d/q '{:find  [(sample 10 ?v)]
          :in [$ ?n]
          :where [[_ :sentence/group ?v]]}
-       db n))
+       (u/get-db state) n))
 
-(defn sample-sentence-group-squuid [db]
+(defn sample-sentence-group-squuid [state]
   (first (d/q '[:find (sample 1 ?val) .
                 :where [_ :sentence/group ?val]]
-              db)))
+              (u/get-db state))))
 
 (defn pull-translation-pair
-  ([db]
-   (pull-translation-pair db (sample-sentence-group-squuid db)))
-  ([db squuid]
+  ([state]
+   (pull-translation-pair state (sample-sentence-group-squuid db)))
+  ([state squuid]
    (d/q '[:find ?sentence-text
           :in $ ?squuid
           :where [?e :sentence/group ?squuid]
                  [?e :sentence/text  ?sentence-text]]
-        db squuid)))
+        (u/get-db sate) squuid)))
