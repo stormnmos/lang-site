@@ -72,7 +72,7 @@
          :optimizations :none
          :compiler-options {:devcards true})
    (serve :httpkit true
-          #_ #_ :handler 'lang-site.core/handler
+          :handler 'lang-site.core/routes
           :reload true)
    (repl :server true)))
 

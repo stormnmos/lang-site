@@ -10,8 +10,6 @@
                       <! >! <!!
                       >!! put! take!]]))
 
-
-
 (defn load-schema [state schema-tx]
   (d/transact (:connestion state) schema-tx))
 

@@ -26,9 +26,9 @@
 
 (defroutes routes
   (GET "/translation-group" []
-       (q/pull-translation-pair (u/get-db state)))
+       (pr-str (q/pull-translation-pair state)))
   (GET "/translation-group/:squuid" [squuid]
-       (q/pull-translation-pair (u/get-db state)))
+       (pr-str (q/pull-translation-pair state squuid)))
   (route/files "/" {:root "html"})
   (route/not-found "<h1>Page not found</h1>"))
 
@@ -36,7 +36,6 @@
    routes)
 
 ;;; Main handler for transacting into datomic
-
 (async/go
   (while true
     (let [{:keys [tx-chan fail-chan success-chan]} state
