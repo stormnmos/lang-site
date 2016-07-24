@@ -54,8 +54,5 @@
    {:state conn
     :parser (om/parser {:read read :mutate mutate})}))
 
-(om/add-root! reconciler
-  Counter (gdom/getElement "app"))
-
 (defn run []
-  nil)
+  (om/add-root! reconciler Counter (gdom/getElement "app")))

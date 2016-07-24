@@ -27,6 +27,11 @@
                  [org.omcljs/om "1.0.0-alpha34"]
                  ;; Devcards addon
                  [devcards "0.2.1-7"]
+                 ;; Clojurescript REPL
+                 [adzerk/boot-cljs-repl   "0.3.2"]
+                 [com.cemerick/piggieback "0.2.1"  :scope "test"]
+                 [weasel                  "0.7.0"  :scope "test"]
+                 [org.clojure/tools.nrepl "0.2.12" :scope "test"]
                  ;; Client Side Application Requirements
                  [sablono "0.7.2"]
                  [enfocus  "2.1.1"]
@@ -50,7 +55,8 @@
          '[adzerk.boot-reload :refer [reload]]
          '[deraen.boot-less :refer [less]]
          '[pandeiro.boot-http :refer [serve]]
-         '[environ.boot :refer [environ]])
+         '[environ.boot :refer [environ]]
+         '[adzerk.boot-cljs-repl :refer [cljs-repl start-repl]])
 
 (task-options!
  pom {:project "lang-site"
@@ -71,13 +77,15 @@
    (speak)
    (reload)
    (less)
+   (cljs-repl)
    (cljs :source-map true
          :optimizations :none
          :compiler-options {:devcards true})
    (serve :httpkit true
           :handler 'lang-site.core/routes
           :reload true)
-   (repl :server true)))
+   (repl :server true)
+   (target :dir #{"target"})))
 
 (deftask release
   []
