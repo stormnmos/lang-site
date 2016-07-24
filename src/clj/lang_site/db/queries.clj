@@ -56,10 +56,10 @@
 
 (defn pull-translation-pair
   ([state]
-   (pull-translation-pair state (sample-sentence-group-squuid db)))
+   (pull-translation-pair state (sample-sentence-group-squuid state)))
   ([state squuid]
    (d/q '[:find ?sentence-text
           :in $ ?squuid
           :where [?e :sentence/group ?squuid]
                  [?e :sentence/text  ?sentence-text]]
-        (u/get-db sate) squuid)))
+        (u/get-db state) squuid)))
