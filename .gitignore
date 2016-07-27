@@ -1,2 +1,4 @@
 # Extra data
 *.csv
+target/
+out/

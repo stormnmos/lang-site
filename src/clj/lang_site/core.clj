@@ -29,7 +29,7 @@
        (pr-str (q/pull-translation-pair state)))
   (GET "/translation-group/:squuid" [squuid]
        (pr-str (q/pull-translation-pair state squuid)))
-  (route/files "/" {:root "html"})
+  (route/files "/" {:root "target"})
   (route/not-found "<h1>Page not found</h1>"))
 
 (def handler
