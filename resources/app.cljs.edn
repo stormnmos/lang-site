@@ -1,2 +1,2 @@
-{:require [lang-site.app]
- :init-fns [lang-site.app/run]}
+{:require [lang-site.core]
+ :init-fns [lang-site.core/run]}

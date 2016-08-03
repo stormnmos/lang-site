@@ -12,7 +12,7 @@
 
 (set-env!
  :source-paths #{"less" "src/clj" "src/cljc" "src/cljs"}
- :resource-paths #{"html" "resources"}
+ :resource-paths #{"html" "resources" "templates"}
  :dependencies '[;; Boot Requirements
                  [adzerk/boot-cljs "1.7.228-1"]
                  [adzerk/boot-reload "0.4.11"]
@@ -37,7 +37,7 @@
                  [enfocus  "2.1.1"]
                  [om-sync "0.1.1"]
                  [datascript "0.15.2"]
-                 [com.taoensso/sente "1.10.0"]
+                 [secretary "1.2.3"]
                  ;; Server Side Requirements
                  [ring "1.5.0"]
                  [compojure "1.5.1"]
@@ -65,7 +65,8 @@
                 "datomic:couchbase://localhost:4334/datomic/lang-site/?password=password"
                 :schema-file "resources/data/lang-site-schema.edn"
                 :sentence-file "resources/data/sentences.csv"
-                :links-file "resources/data/links.csv"}})
+                :links-file "resources/data/links.csv"}}
+ reload {:on-jsload 'lang-site.core/on-js-reload})
 
 (def +version+ "0.1.1")
 
@@ -81,11 +82,12 @@
    (cljs :source-map true
          :optimizations :none
          :compiler-options {:devcards true})
-   (serve :httpkit true
-          :handler 'lang-site.core/routes
-          :reload true)
-   (repl :server true)
-   (target :dir #{"target"})))
+   (target :dir #{"target"})
+   (serve
+    :dir "target"
+    :httpkit true
+    :handler 'lang-site.core/routes
+    :reload true)))
 
 (deftask release
   []
