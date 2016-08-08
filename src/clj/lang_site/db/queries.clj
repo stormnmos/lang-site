@@ -58,8 +58,14 @@
   ([state]
    (pull-translation-pair state (sample-sentence-group-squuid state)))
   ([state squuid]
-   (d/q '[:find ?sentence-text
+   (d/q '[:find (pull ?e [:sentence/text])
           :in $ ?squuid
           :where [?e :sentence/group ?squuid]
-                 [?e :sentence/text  ?sentence-text]]
+                 [?e :sentence/text]]
         (u/get-db state) squuid)))
+
+(defn pull-schema [state]
+  (d/q '[:find (pull ?e [*])
+         :where [:db.part/db :db.install/attribute ?p]
+                [?p :db/ident ?e]]
+       (u/get-db state)))

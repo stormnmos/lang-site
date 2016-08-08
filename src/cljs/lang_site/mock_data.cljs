@@ -1,6 +1,5 @@
 (ns lang-site.mock-data)
 
-
 (def schema
   {:translation/group
    {:db/cardinality :db.cardinality/many
@@ -13,6 +12,9 @@
     :db/valueType :db.type/ref}
    :widget/content
    {:db/cardinality :db.cardinality/many
+    :db/valueType :db.type/ref}
+   :card/sentences
+   {:db/cardinality :db.cardinality/many
     :db/valueType :db.type/ref}})
 
 (def fixtures
@@ -21,12 +23,12 @@
     :app/count 0}
    {:db/id -1
     :widget/type :sentence
-    :sentence/text "First Sentence"
+    :sentence/text "First Sentence\n"
     :sentence/group 100
     :sentence/language :sentence.language/eng}
    {:db/id -2
     :widget/type :sentence
-    :sentence/text "Second Sentence"
+    :sentence/text "Second Sentence\n"
     :sentence/group 100
     :sentence/language :sentence.language/tur}
    {:db/id -3
@@ -56,4 +58,11 @@
     :widget/type :page}
    {:db/id -101
     :widget/type :card
-    :card/text #{-1 -2}}])
+    :card/title "Card 1"
+    :card/sentences [-1 -2]
+    :card/content [-1 -2]}
+   {:db/id -102
+    :widget/type :card
+    :card/title "Card 2"
+    :card/sentences [-1 -2]
+    :card/content "asdfasdf"}])

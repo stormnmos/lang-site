@@ -30,8 +30,17 @@
          :where [?e ?a ?v]]
        db att v))
 
+(defn ea [db att]
+  (d/q '[:find ?e
+         :in $ ?a
+         :where [?e ?a]]
+       db att))
+
 (defn g [db att eid]
   (att (d/pull db [att] eid)))
+
+(defn gets [db att eid]
+  ((first (keys att)) (d/pull db [att] eid)))
 
 (defn gv [db atts eid]
   (map (fn [att] (g db att eid)) atts))

@@ -33,11 +33,14 @@
                  [weasel                  "0.7.0"  :scope "test"]
                  [org.clojure/tools.nrepl "0.2.12" :scope "test"]
                  ;; Client Side Application Requirements
-                 [sablono "0.7.2"]
-                 [enfocus  "2.1.1"]
-                 [om-sync "0.1.1"]
-                 [datascript "0.15.2"]
+                 [sablono "0.7.2"]         ;;; client side html rendering
+                 [datascript "0.15.2"]     ;;; client side db holding app
                  [secretary "1.2.3"]
+                 [cljs-ajax "0.5.8"]
+                 [buddy "1.0.0"]
+                 [om-sync "0.1.1"]
+                 [ring-transit "0.1.6"]
+                 [com.cognitect/transit-cljs "0.8.239"]
                  ;; Server Side Requirements
                  [ring "1.5.0"]
                  [compojure "1.5.1"]
@@ -86,7 +89,7 @@
    (serve
     :dir "target"
     :httpkit true
-    :handler 'lang-site.core/routes
+    :handler 'lang-site.core/handler
     :reload true)))
 
 (deftask release

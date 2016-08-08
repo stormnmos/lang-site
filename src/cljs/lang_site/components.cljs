@@ -33,7 +33,9 @@
   (reify
     om/IRender
     (render [this]
-      (let [links (:widget/content (d/pull db [{:widget/content [:link/text]}] eid))]
+      (let [links
+            (:widget/content (d/pull db [{:widget/content [:link/text]}]
+                                     eid))]
         (rend :header [eid db] "Header" links)))))
 
 (defmethod rend :header-drawer
@@ -50,7 +52,7 @@
   (reify
     om/IRender
     (render [this]
-      (let [links (:widget/content (d/pull db [{:widget/content [:link/text]}] eid))]
+      (let [links (db/gets db {:widget/content [:link/text]} eid)]
         (rend :header-drawer [eid db] "Header-drawer" links)))))
 
 (defmethod rend :page
@@ -66,69 +68,42 @@
             (db/get-widgets db [:header :header-drawer])]
         (rend :page [eid db] [header header-drawer])))))
 
-(defn card-template [data]
-  (sab/html
-   [:.mdl-card.mdl-shadow--2dp
-    [:.mdl-card__title-text
-     [:h2.mdl-card__title-text "Test card"]]
-    [:.mdl-card__supporting-text data]
-    [:.mdl-card__actions.mdl-card--border
-     [:a.mdl-button.mdl-button--colored.mdl-js-button.mdl-js-ripple-effect
-      "Button"]]
-    [:.mdl-card__menu
-     [:button.mdl-button.mdl-button--icon.mdl-js-button.mdl-js-ripple-effect
-      [:i.material-icons "share"]]]]))
-
 (defmethod rend :card
-  [_ [_ _] data]
+  [_ [_ _] title texts]
   (sab/html
    [:.mdl-card.mdl-shadow--2dp
     [:.mdl-card__title-text
-     [:h2.mdl-card__title-text "Test card"]]
-    [:.mdl-card__supporting-text data]
+     [:h2.mdl-card__title-text title]]
+    [:.mdl-card__supporting-text (map :sentence/text texts)]
     [:.mdl-card__actions.mdl-card--border
      [:a.mdl-button.mdl-button--colored.mdl-js-button.mdl-js-ripple-effect
       "Button"]]
     [:.mdl-card__menu
      [:button.mdl-button.mdl-button--icon.mdl-js-button.mdl-js-ripple-effect
-      [:i.material-icons "share"]]]]))
+      [:i.material-icons "person"]]]]))
 
 (defmethod widgets :card [[eid db]]
   (reify
     om/IRender
     (render [this]
-      (rend :card [eid db] "Placeholder card data"))))
+      (let [title (db/g db :card/title eid)
+            texts (db/gets db {:card/sentences [:sentence/text]} eid)]
+        (rend :card [eid db] title texts)))))
 
 (defmethod rend :grid
-  [_ [_ _] data]
+  [_ [_ _] cards]
   (sab/html
    [:.mdl-grid
-    [:.mdl-cell.mdl-cell--6-col (card-template data)]
-    [:.mdl-cell.mdl-cell--6-col (card-template data)]
-    [:.mdl-cell.mdl-cell--6-col (card-template data)]
-    [:.mdl-cell.mdl-cell--6-col (card-template data)]
-    [:.mdl-cell.mdl-cell--6-col (card-template data)]
-    [:.mdl-cell.mdl-cell--6-col (card-template data)]
-    [:.mdl-cell.mdl-cell--6-col (card-template data)]
-    [:.mdl-cell.mdl-cell--6-col (card-template data)]
-    [:.mdl-cell.mdl-cell--6-col (card-template data)]
-    [:.mdl-cell.mdl-cell--6-col (card-template data)]
-    [:.mdl-cell.mdl-cell--6-col (card-template data)]
-    [:.mdl-cell.mdl-cell--6-col (card-template data)]
-    [:.mdl-cell.mdl-cell--6-col (card-template data)]]))
+    (map (fn [card]
+           [:.mdl-cell.mdl-cell--6-col (u/make widgets card)])
+         cards)]))
 
 (defmethod widgets :grid [[eid db]]
   (reify
     om/IRender
     (render [this]
-      (rend :grid [eid db] "Placeholder"))))
-
-#_(defmethod widgets :sentence [[eid db]]
-  (reify
-    om/IRender
-    (render [this]
-      (let [[text group] (db/gv db [:sentence/text :sentence/group] eid)]
-        (card-with-menu-button "Turkish Sentence" text group "share")))))
+      (let [cards (db/get-widgets db :card)]
+        (rend :grid [eid db] cards)))))
 
 (defn widget [conn owner]
   (reify

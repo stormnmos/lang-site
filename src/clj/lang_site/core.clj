@@ -10,6 +10,8 @@
             [lang-site.db.queries :as q]
             [lang-site.state :as state]
             [lang-site.util :as u]
+            [ring.middleware.transit :as transit :only [wrap-transit-body
+                                                        wrap-transit]]
             [com.stuartsierra.component :as component]))
 
 (def state (->> (state/new-state
@@ -21,19 +23,27 @@
 
 (defn generate-response [data & [status]]
   {:status (or status 200)
-   :headers {"Content-Type" "application/edn"}
+   :headers {"Content-Type" "application/text"}
    :body (pr-str data)})
 
 (defroutes routes
   (GET "/translation-group" []
-       (pr-str (q/pull-translation-pair state)))
+       {:status 200
+        :body  (q/pull-translation-pair state)})
   (GET "/translation-group/:squuid" [squuid]
        (pr-str (q/pull-translation-pair state squuid)))
+  (GET "/api/echo" request
+       {:status 200
+        :headers {"Content-Type" "application/transit"}
+        :body request})
+  (GET "/api/schema" []
+       {:status 200
+        :body (q/pull-schema state)})
   (route/files "/" {:root "target"})
   (route/not-found "<h1>Page not found</h1>"))
 
 (def handler
-   routes)
+  (transit/wrap-transit-body routes {:encoding :json}))
 
 ;;; Main handler for transacting into datomic
 (async/go
