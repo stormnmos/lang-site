@@ -40,7 +40,7 @@
      :method method
      :handler server-request-handler
      :format (ajax/transit-request-format)
-     :response-format (ajax/text-response-format)})))
+     :response-format (ajax/transit-response-format)})))
 
 (defroute users "/users/:eid" [eid]
   (a/transact! events {:db/eid eid :article/title "users"}))
