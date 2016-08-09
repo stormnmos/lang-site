@@ -42,8 +42,10 @@
   (route/files "/" {:root "target"})
   (route/not-found "<h1>Page not found</h1>"))
 
-(def handler
+#_(def handler
   (transit/wrap-transit-body routes {:encoding :json}))
+
+(def handler routes)
 
 ;;; Main handler for transacting into datomic
 (async/go

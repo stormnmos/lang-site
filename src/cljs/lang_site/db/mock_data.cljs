@@ -1,4 +1,4 @@
-(ns lang-site.mock-data)
+(ns lang-site.db.mock-data)
 
 (def schema
   {:translation/group

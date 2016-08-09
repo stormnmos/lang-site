@@ -14,6 +14,10 @@
 (defn transact! [events & data]
   (go (>! events data)))
 
+(defmulti transactions!
+  (fn [transaction]
+    (:type transaction)))
+
 (defn retract [_ eid events]
   (go (>! events [[:db.fn/retractEntity eid]])))
 

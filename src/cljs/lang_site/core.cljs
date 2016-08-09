@@ -27,29 +27,20 @@
 (defonce conn (db/create-db))
 (defonce test-db (db/populate-db! conn))
 
-(defn translation-group-handler [response]
-  (.log js/console (cljs.pprint/pprint (second response)))
-  (a/transact! events (second response)))
+(defn server-request-handler [status body]
+  (.log js/console (str status body))
+  (a/transact! events body))
 
-(defn translation-group-request []
-  (ajax/ajax-request
-   {:uri "/translation-group"
-    :method :get
-    :handler translation-group-handler
-    :format (ajax/transit-request-format)
-    :response-format (ajax/text-response-format)}))
-
-(defn schema-handler [response]
-  (.log js/console (str response))
-  (a/transact! events (second response)))
-
-(defn schema-request []
-  (ajax/ajax-request
-   {:uri "/api/schema"
-    :method :get
-    :handler schema-handler
-    :format (ajax/transit-request-format)
-    :response-format (ajax/text-response-format)}))
+(defn server-request
+  ([uri]
+   (server-request uri :get))
+  ([uri method]
+   (ajax/ajax-request
+    {:uri uri
+     :method method
+     :handler server-request-handler
+     :format (ajax/transit-request-format)
+     :response-format (ajax/text-response-format)})))
 
 (defroute users "/users/:eid" [eid]
   (a/transact! events {:db/eid eid :article/title "users"}))
@@ -67,13 +58,13 @@
   (a/transact! events {:db/id 0 :ui/article {:db/id (js/parseInt eid)}}))
 
 (defroute api-schema "/api/schema" []
-  (schema-request))
+  (server-request "/api/schema"))
 
 (defroute language-ids "/language-ids" []
   nil)
 
 (defroute translation-group "/translation-group" []
-  (translation-group-request))
+  (server-request "/translation-group"))
 
 (defn run []
   (go

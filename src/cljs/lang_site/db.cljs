@@ -1,6 +1,6 @@
 (ns lang-site.db
   (:require [datascript.core :as d]
-            [lang-site.mock-data :as m]))
+            [lang-site.db.mock-data :as m]))
 
 (defn create-db []
   (d/create-conn m/schema))
