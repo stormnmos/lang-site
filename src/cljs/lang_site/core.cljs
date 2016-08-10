@@ -33,7 +33,7 @@
 (defroute language-ids "/language-ids" []
   nil)
 
-(defroute translation-group "/translation-group" []
+(defroute translation-group "#/translation-group" []
   (req/request "/translation-group"))
 
 (defn run []

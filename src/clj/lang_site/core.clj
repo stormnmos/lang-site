@@ -14,7 +14,7 @@
                                                         wrap-transit]]
             [com.stuartsierra.component :as component]))
 
-(def state (->> (state/new-state
+(defonce state (->> (state/new-state
                      (env :database-url)
                      (async/chan 100)
                      (async/chan (async/sliding-buffer 10))

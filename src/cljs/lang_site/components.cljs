@@ -70,12 +70,14 @@
         (rend :page [eid db] [header header-drawer])))))
 
 (defmethod rend :card
-  [_ [_ _] title texts]
+  [_ [eid _] title texts]
   (sab/html
    [:.mdl-card.mdl-shadow--2dp
     [:.mdl-card__title-text
-     [:h2.mdl-card__title-text title]]
-    [:.mdl-card__supporting-text (map :sentence/text texts)]
+     [:h2.mdl-card__title-text (str "Card " eid)]]
+    [:.mdl-card__supporting-text
+     (map (fn [text] [:h6 (str (:sentence/text text) "\n")])
+          texts)]
     [:.mdl-card__actions.mdl-card--border
      [:a.mdl-button.mdl-button--colored.mdl-js-button.mdl-js-ripple-effect
       {:on-click #(req/request "/translation-group")}
@@ -97,8 +99,8 @@
   (sab/html
    [:.mdl-grid
     (map (fn [card]
-           [:.mdl-cell.mdl-cell--6-col (u/make widgets card)])
-         cards)]))
+           [:.mdl-cell.mdl-cell--4-col (u/make widgets card)])
+         (sort-by first cards))]))
 
 (defmethod widgets :grid [[eid db]]
   (reify

@@ -1,18 +1,19 @@
 (ns lang-site.requests
   (:require
    [ajax.core :as ajax :refer [GET POST]]
+   [datascript.core :as d]
    [lang-site.actions :as a]
    [lang-site.state :as state]
    [lang-site.components.templates :as templates]
    [secretary.core :as secretary :refer-macros [defroute]]))
 
-(defn card-request-handler [status body]
+(defn card-request-handler [[status body]]
   (.log js/console (str body))
-  (a/transact! state/events [(templates/card body)]))
+  (d/transact! lang-site.core/conn [(templates/card body)]))
 
-(defn schema-request-handler [status body]
-  (.log js/console (str body))
-  (a/transact! state/events [body]))
+(defn schema-request-handler [response]
+  (.log js/console (str response))
+  (a/transact! state/events [response]))
 
 (defn req
   [uri method handler]
