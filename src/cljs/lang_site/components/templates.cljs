@@ -1,6 +1,12 @@
-(ns lang-site.components.templates
-  (:require
-   [lang-site.util :as u]
-   [kioo.om :refer [content set-attr do-> substitute listen]]
-   [kioo.core :refer [handle-wrapper]])
-  (:require-macros [kioo.om :refer [defsnippet deftemplate]]))
+(ns lang-site.components.templates)
+
+(defn sentence [data]
+  (merge {:widget/type :sentence} data))
+
+(defn card [data]
+  (.log js/console (str data))
+  {:db/id -1
+   :widget/type :card
+   :card/title "New Card from Datomic"
+   :card/sentences (mapv sentence data)
+   :card/content "Placeholder content data"})

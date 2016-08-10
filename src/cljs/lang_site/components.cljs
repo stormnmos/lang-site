@@ -4,6 +4,7 @@
             [datascript.core :as d]
             [lang-site.actions :as a]
             [lang-site.db :as db]
+            [lang-site.requests :as req]
             [lang-site.util :as u]
             [sablono.core :as sab :include-macros true]
             [cljs.core.async :as async :refer [<! >! put! take!]])
@@ -77,6 +78,7 @@
     [:.mdl-card__supporting-text (map :sentence/text texts)]
     [:.mdl-card__actions.mdl-card--border
      [:a.mdl-button.mdl-button--colored.mdl-js-button.mdl-js-ripple-effect
+      {:on-click #(req/request "/translation-group")}
       "Button"]]
     [:.mdl-card__menu
      [:button.mdl-button.mdl-button--icon.mdl-js-button.mdl-js-ripple-effect
@@ -112,9 +114,6 @@
       (let [db @conn
             header        (db/get-widget db :header)
             header-drawer (db/get-widget db :header-drawer)
-            sentence      (db/get-widget db :sentence)
-            navigation    (db/get-widget db :navigation)
-            page          (db/get-widget db :page)
             grid          (db/get-widget db :grid)]
         (sab/html [:.mdl-layout.mdl-js-layout.mdl-layout--fixed-header
                    (u/make-all widgets [header header-drawer grid])])))))

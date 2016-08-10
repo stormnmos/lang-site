@@ -54,26 +54,20 @@
                 :where [_ :sentence/group ?val]]
               (u/get-db state))))
 
-
-
-(defn pull-translation-pair*
-  ([state]
-   (pull-translation-pair state (sample-sentence-group-squuid state)))
-  ([state squuid]
-   (d/q '[:find [?text1 ?text2]
-          :in $ ?squuid
-          :where
-          [?e1 :sentence/group ?squuid]
-          [?e1 :sentence/text  ?text1]
-          [?e2 :sentence/group ?squuid]
-          [?e2 :sentence/text  ?text2]]
-        (u/get-db state) squuid)))
-
 (defn pull-translation-pair
 ([state]
 (pull-translation-pair state (sample-sentence-group-squuid state)))
 ([state squuid]
- (d/q '[:find [(pull ?e1 [*]) (pull ?e2 [*])]
+ (d/q '[:find [(pull ?e1 [:db/id
+                          :sentence/id
+                        #_{:sentence/language [:db/ident]}
+                          :sentence/group
+                          :sentence/text])
+               (pull ?e2 [:db/id
+                          :sentence/id
+                        #_{:sentence/language [:db/ident]}
+                          :sentence/group
+                          :sentence/text])]
        :in $ ?squuid
        :where
        [?e1 :sentence/group ?squuid]

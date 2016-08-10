@@ -1,7 +1,8 @@
 (ns lang-site.actions
   (:require
    [cljs.core.async :as async :refer [<! >! put! take!]]
-   [om.core :as om])
+   [om.core :as om]
+   [lang-site.components.templates :as templates])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn add-text [eid events owner order tag]

@@ -37,10 +37,10 @@
                  [datascript "0.15.2"]     ;;; client side db holding app
                  [secretary "1.2.3"]
                  [cljs-ajax "0.5.8"]
-                 [buddy "1.0.0"]
                  [om-sync "0.1.1"]
                  [ring-transit "0.1.6"]
                  [com.cognitect/transit-cljs "0.8.239"]
+                 [com.cemerick/friend "0.2.3"]
                  ;; Server Side Requirements
                  [ring "1.5.0"]
                  [compojure "1.5.1"]
@@ -69,7 +69,11 @@
                 :schema-file "resources/data/lang-site-schema.edn"
                 :sentence-file "resources/data/sentences.csv"
                 :links-file "resources/data/links.csv"}}
- reload {:on-jsload 'lang-site.core/on-js-reload})
+ reload {:on-jsload 'lang-site.core/on-js-reload}
+ serve {:dir "target"
+        :httpkit true
+        :handler 'lang-site.core/handler
+        :reload true})
 
 (def +version+ "0.1.1")
 
@@ -91,6 +95,20 @@
     :httpkit true
     :handler 'lang-site.core/handler
     :reload true)))
+
+(deftask run-prod
+  []
+  (comp
+   (environ)
+   (watch)
+   (speak)
+   (reload)
+   (less)
+   (cljs-repl)
+   (cljs :source-map true
+         :optimizations :advanced)
+   (target :dir #{"target"})
+   (serve)))
 
 (deftask release
   []

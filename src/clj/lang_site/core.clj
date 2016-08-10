@@ -15,11 +15,11 @@
             [com.stuartsierra.component :as component]))
 
 (def state (->> (state/new-state
-                 (env :database-url)
-                 (async/chan 100)
-                 (async/chan (async/sliding-buffer 10))
-                 (async/chan (async/sliding-buffer 10)))
-                (component/start)))
+                     (env :database-url)
+                     (async/chan 100)
+                     (async/chan (async/sliding-buffer 10))
+                     (async/chan (async/sliding-buffer 10)))
+                    (component/start)))
 
 (defn generate-response [data & [status]]
   {:status (or status 200)
@@ -44,8 +44,6 @@
 
 (def handler
   (transit/wrap-transit-response routes {:encoding :json}))
-
-#_(def handler routes)
 
 ;;; Main handler for transacting into datomic
 (async/go
