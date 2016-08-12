@@ -30,6 +30,9 @@
 (defroute api-schema "/api/schema" []
   (req/request "/api/schema"))
 
+(defroute users "#/api/users" []
+  (req/request "/api/users"))
+
 (defroute language-ids "/language-ids" []
   nil)
 
@@ -39,8 +42,19 @@
 (defn run []
   (go
     (while true
-      (d/transact! conn (<! state/events))
-      (d/transact! conn (<! state/transactions))))
+      (let [tx (<! state/events)]
+        (.log js/console (pr-str tx))
+        (try (d/transact! conn tx)
+             (catch js/Object e
+               (.log js/console e))))))
+  (go
+    (while true
+      (>! state/card-queue
+          (req/request "/translation-group" a/card-request-handler))))
+  (d/listen!
+   conn
+   (fn [tx]
+     (.log js/console (get-in tx [:tempids -1]))))
   (let [history (History.)]
     (events/listen history "navigate"
                    (fn [event]

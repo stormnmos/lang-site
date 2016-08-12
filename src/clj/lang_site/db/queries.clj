@@ -51,7 +51,8 @@
 
 (defn sample-sentence-group-squuid [state]
   (first (d/q '[:find (sample 1 ?val) .
-                :where [_ :sentence/group ?val]]
+                :where
+                [_ :sentence/group ?val]]
               (u/get-db state))))
 
 (defn pull-translation-pair
@@ -60,12 +61,12 @@
 ([state squuid]
  (d/q '[:find [(pull ?e1 [:db/id
                           :sentence/id
-                        #_{:sentence/language [:db/ident]}
+                          {:sentence/language [:db/ident]}
                           :sentence/group
                           :sentence/text])
                (pull ?e2 [:db/id
                           :sentence/id
-                        #_{:sentence/language [:db/ident]}
+                          {:sentence/language [:db/ident]}
                           :sentence/group
                           :sentence/text])]
        :in $ ?squuid
@@ -81,3 +82,15 @@
          :where [:db.part/db :db.install/attribute ?p]
                 [?p :db/ident ?e]]
        (u/get-db state)))
+
+(defn pull-users [state]
+  (d/q '[:find (pull ?e [*]) .
+         :in $
+         :where [?e :user/name]]
+       (u/get-db state)))
+
+(defn pull-user-by-name [state name]
+  (d/q '[:find (pull ?e [*]) .
+         :in $ ?name
+         :where [?e :user/name ?name]]
+       (u/get-db state) name))

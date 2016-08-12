@@ -39,6 +39,9 @@
   (GET "/api/schema" []
        {:status 200
         :body (q/pull-schema state)})
+  (GET "/api/users" []
+       {:status 200
+        :body (q/pull-users state)})
   (route/files "/" {:root "target"})
   (route/not-found "<h1>Page not found</h1>"))
 

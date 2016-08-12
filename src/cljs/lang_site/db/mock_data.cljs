@@ -15,12 +15,16 @@
     :db/valueType :db.type/ref}
    :card/sentences
    {:db/cardinality :db.cardinality/many
+    :db/valueType :db.type/ref}
+   :app/grid-components
+   {:db/cardinality :db.cardinality/many
     :db/valueType :db.type/ref}})
 
 (def fixtures
   [{:db/id 0
     :app/title "Hello, DataScript!"
-    :app/count 0}
+    :app/count 0
+    :app/grid-components [-101]}
    {:db/id -1
     :widget/type :sentence
     :sentence/text "First Sentence\n"
@@ -64,5 +68,5 @@
    {:db/id -102
     :widget/type :card
     :card/title "Card 2"
-    :card/sentences [-1 -2]
+    :card/sentences [-2 -1]
     :card/content "asdfasdf"}])

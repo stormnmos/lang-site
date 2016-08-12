@@ -1,6 +1,11 @@
 (ns lang-site.db.transaction-templates
   (:require [datomic.api :as d]))
 
+(defn user-template [[name email]]
+  {:type :user
+   :tx {:user/name name
+        :user/email email}})
+
 (defn links-template [eids]
   (let [squuid (d/squuid)]
     {:type :link

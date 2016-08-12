@@ -36,6 +36,7 @@
                  [sablono "0.7.2"]         ;;; client side html rendering
                  [datascript "0.15.2"]     ;;; client side db holding app
                  [secretary "1.2.3"]
+                 [cljs-http "0.1.41"]
                  [cljs-ajax "0.5.8"]
                  [om-sync "0.1.1"]
                  [ring-transit "0.1.6"]

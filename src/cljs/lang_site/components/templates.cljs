@@ -4,7 +4,6 @@
   (merge {:widget/type :sentence} data))
 
 (defn card [data]
-  (.log js/console (str data))
   {:db/id -1
    :widget/type :card
    :card/title "New Card from Datomic"

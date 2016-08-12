@@ -4,7 +4,6 @@
             [datascript.core :as d]
             [lang-site.actions :as a]
             [lang-site.db :as db]
-            [lang-site.requests :as req]
             [lang-site.util :as u]
             [sablono.core :as sab :include-macros true]
             [cljs.core.async :as async :refer [<! >! put! take!]])
@@ -30,7 +29,7 @@
              [:a.mdl-navigation__link {:href "#"} (:link/text link)])
            links)]]]))
 
-(defmethod widgets :header [[eid db]]
+(defmethod widgets :header [[eid db] owner]
   (reify
     om/IRender
     (render [this]
@@ -49,7 +48,7 @@
              [:a.mdl-navigation__link {:href "#"} (:link/text link)])
            links)]]))
 
-(defmethod widgets :header-drawer [[eid db]]
+(defmethod widgets :header-drawer [[eid db] owner]
   (reify
     om/IRender
     (render [this]
@@ -61,7 +60,7 @@
   (sab/html [:.mdl-layout.mdl-js-layout.mdl-layout--fixed-header
          (map u/make [header header-drawer])]))
 
-(defmethod widgets :page [[eid db]]
+(defmethod widgets :page [[eid db] owner]
   (reify
     om/IRender
     (render [this]
@@ -70,44 +69,48 @@
         (rend :page [eid db] [header header-drawer])))))
 
 (defmethod rend :card
-  [_ [eid _] title texts]
+  [_ [eid db] owner title texts]
   (sab/html
-   [:.mdl-card.mdl-shadow--2dp
+   [:.mdl-card.mdl-shadow--4dp.language-card
     [:.mdl-card__title-text
      [:h2.mdl-card__title-text (str "Card " eid)]]
     [:.mdl-card__supporting-text
-     (map (fn [text] [:h6 (str (:sentence/text text) "\n")])
-          texts)]
+     [:ul.mdl-list
+      (map (fn [text] [:li.mdl-list__item
+                       [:span.mdl-list__item-primary-content
+                        (str (:sentence/text text) "\n")]])
+           texts)]]
     [:.mdl-card__actions.mdl-card--border
      [:a.mdl-button.mdl-button--colored.mdl-js-button.mdl-js-ripple-effect
-      {:on-click #(req/request "/translation-group")}
-      "Button"]]
+      {:on-click #(a/add-card eid db
+                              (:events (om/get-shared owner)))}
+      "Next Sentence"]]
     [:.mdl-card__menu
      [:button.mdl-button.mdl-button--icon.mdl-js-button.mdl-js-ripple-effect
       [:i.material-icons "person"]]]]))
 
-(defmethod widgets :card [[eid db]]
+(defmethod widgets :card [[eid db] owner]
   (reify
     om/IRender
     (render [this]
       (let [title (db/g db :card/title eid)
             texts (db/gets db {:card/sentences [:sentence/text]} eid)]
-        (rend :card [eid db] title texts)))))
+        (rend :card [eid db] owner title texts)))))
 
 (defmethod rend :grid
-  [_ [_ _] cards]
+  [_ [_ _] components]
   (sab/html
    [:.mdl-grid
-    (map (fn [card]
-           [:.mdl-cell.mdl-cell--4-col (u/make widgets card)])
-         (sort-by first cards))]))
+    (map (fn [component]
+           [:.mdl-cell.mdl-cell--2-col (u/make widgets component)])
+         (sort-by first components))]))
 
-(defmethod widgets :grid [[eid db]]
+(defmethod widgets :grid [[eid db] owner]
   (reify
     om/IRender
     (render [this]
-      (let [cards (db/get-widgets db :card)]
-        (rend :grid [eid db] cards)))))
+      (let [components (db/get-ui-comps db :app/grid-components)]
+        (rend :grid [eid db] components)))))
 
 (defn widget [conn owner]
   (reify

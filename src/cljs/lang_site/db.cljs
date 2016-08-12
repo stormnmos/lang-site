@@ -75,6 +75,10 @@
 (defn get-ui-att [db att]
   (g db att 0))
 
+(defn get-ui-comps [db att]
+  (mapv (fn [eid] [(:db/id eid) db])
+        (att (d/pull db [{att [:db/id]}] 0))))
+
 (defn set-att [eid att val]
   {:db/id eid
    att val})
