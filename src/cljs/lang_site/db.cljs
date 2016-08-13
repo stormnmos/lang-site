@@ -1,5 +1,6 @@
 (ns lang-site.db
   (:require [datascript.core :as d]
+            [datascript.db :as ddb]
             [lang-site.db.mock-data :as m]))
 
 (defn create-db []
@@ -91,3 +92,10 @@
          :in $ ?a
          :where [_ ?a ?v]]
        db att))
+
+#_(defn cas [db e a ov nv]
+  (let [e (ddb/entid-strict db e)
+        _  (ddb/validate-attr db a)
+        ov (if (ddb/ref? db a) (ddb/entid-strict db ov) ov)
+        nv (if (ddb/ref? db a) (ddb/entid-strict db nv) nv)
+        datoms ()]))

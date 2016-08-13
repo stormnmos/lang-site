@@ -82,7 +82,7 @@
            texts)]]
     [:.mdl-card__actions.mdl-card--border
      [:a.mdl-button.mdl-button--colored.mdl-js-button.mdl-js-ripple-effect
-      {:on-click #(a/add-card eid db
+      {:on-click #(a/next-card eid db
                               (:events (om/get-shared owner)))}
       "Next Sentence"]]
     [:.mdl-card__menu
@@ -102,7 +102,7 @@
   (sab/html
    [:.mdl-grid
     (map (fn [component]
-           [:.mdl-cell.mdl-cell--2-col (u/make widgets component)])
+           [:.mdl-cell.mdl-cell--3-col (u/make widgets component)])
          (sort-by first components))]))
 
 (defmethod widgets :grid [[eid db] owner]

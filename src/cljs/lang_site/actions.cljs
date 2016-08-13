@@ -1,7 +1,8 @@
 (ns lang-site.actions
   (:require
-   [cljs.core.async :as async :refer [<! >! put! take!]]
+   [cljs.core.async :as async]
    [datascript.core :as d]
+   [datascript.db :as ddb]
    [om.core :as om]
    [lang-site.components.templates :as templates]
    [lang-site.db :as db]
@@ -44,7 +45,11 @@
   {:on-mouse-enter #(om/set-state! owner :show-dropdown true)
    :on-mouse-leave #(om/set-state! owner :show-dropdown false)})
 
-(defn add-card [eid db events]
-  (req/request "/translation-group" card-request-handler)
-  (transact! events [[:db/add 0 :app/grid-components (go (<! state/card-eid-queue))]
-                     [:db/retract 0 :app/grid-components eid]]))
+(defn validate-card [eid db]
+  "confirm that eid should be deleted")
+
+(defn next-card [eid db events]
+  (async/take! state/card-queue identity)
+  (go
+    (transact! events [[:db.fn/cas 0 :app/grid-components
+                         eid (async/<! state/card-eid-queue)]])))
