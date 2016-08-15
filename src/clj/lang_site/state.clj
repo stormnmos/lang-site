@@ -5,12 +5,10 @@
 (defrecord State [url tx-chan fail-chan
                   success-chan connection]
   component/Lifecycle
-
   (start [component]
     (println ";; Creating application state")
     (let [conn (d/connect url)]
       (assoc component :connection conn)))
-
   (stop [component]
     (println ";; Destroying application state")
     (assoc component :connection nil)))

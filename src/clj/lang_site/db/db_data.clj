@@ -15,8 +15,8 @@
 (defn split-by-tab [s]
   (str/split s #"\t"))
 
-(def rdr-s (clojure.java.io/reader (env :sentence-file)))
-(def rdr-l (clojure.java.io/reader (env :links-file)))
+#_(def rdr-s (clojure.java.io/reader (env :sentence-file)))
+#_(def rdr-l (clojure.java.io/reader (env :links-file)))
 
 (defn sentence-ids->db-ids [state ids]
   (map #(q/pba-e (u/get-db state) :sentence/id (read-string %)) ids))
@@ -40,8 +40,8 @@
        (tt/sentence-template)
        (put! (:tx-chan state))))
 
-(defn transact-links [state]
+#_ (defn transact-links [state]
   (run! #(link-to-datomic state %) (line-seq rdr-l)))
 
-(defn transact-sentences []
+#_ (defn transact-sentences []
   (run! sentence-to-datomic (line-seq rdr-s)))

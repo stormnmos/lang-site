@@ -10,6 +10,12 @@
   (:require-macros
    [cljs.core.async.macros :refer [go go-loop]]))
 
+(defprotocol Widget
+  (children-tree [this [eid db]])
+  (remote-call [this [eid db]])
+  (local-call [this] [eid db])
+  (template [this [eid db] data]))
+
 (defmulti rend
   (fn [type [_ _] _]
     type))
@@ -18,25 +24,31 @@
   (fn [[eid db] _]
     (db/g db :widget/type eid)))
 
-(defmethod rend :header [_ [_ _] title links]
-  (sab/html
-   [:header.mdl-layout__header
-    [:.mdl-layout__header-row
-     [:span.mdl-layout-title title]
-     [:.mdl-layout-spacer]
-     [:nav.mdl-navigation.mdl-layout--larget-screen-only
-      (map (fn [link]
-             [:a.mdl-navigation__link {:href "#"} (:link/text link)])
-           links)]]]))
-
 (defmethod widgets :header [[eid db] owner]
   (reify
+    Widget
+    (children-tree [this [eid db]]
+      )
+    (remote-call [this [eid db]]
+      nil)
+    (local-call [this [eid db]]
+      nil)
+    (template [this [eid db] [title links]]
+      (sab/html
+       [:header.mdl-layout__header
+        [:.mdl-layout__header-row
+         [:span.mdl-layout-title title]
+         [:.mdl-layout-spacer]
+         [:nav.mdl-navigation.mdl-layout--larget-screen-only
+          (map (fn [link]
+                 [:a.mdl-navigation__link {:href "#"} (:link/text link)])
+               links)]]]))
     om/IRender
     (render [this]
       (let [links
             (:widget/content (d/pull db [{:widget/content [:link/text]}]
                                      eid))]
-        (rend :header [eid db] "Header" links)))))
+        (template this [eid db] ["Header" links])))))
 
 (defmethod rend :header-drawer
   [_ [_ _] title links]
