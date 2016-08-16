@@ -18,7 +18,9 @@
     :db/valueType :db.type/ref}
    :app/grid-components
    {:db/cardinality :db.cardinality/many
-    :db/valueType :db.type/ref}})
+    :db/valueType :db.type/ref}
+   :widget/type
+   {:db/index true}})
 
 (def fixtures
   [{:db/id 0

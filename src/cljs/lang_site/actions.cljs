@@ -49,7 +49,11 @@
   "confirm that eid should be deleted")
 
 (defn next-card [eid db events]
-  (async/take! state/card-queue identity)
-  (go
+  (let [next (first (filter #(< eid %)
+                            (map :e (d/datoms db :avet :widget/type :card))))]
     (transact! events [[:db.fn/cas 0 :app/grid-components
-                         eid (async/<! state/card-eid-queue)]])))
+                        eid next]
+                       [:db.fn/retractEntity eid]])))
+
+(defn get-card-eids []
+  (d/datoms :avet :card/title))
