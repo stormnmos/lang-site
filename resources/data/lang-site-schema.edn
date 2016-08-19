@@ -1,5 +1,4 @@
-[
- ;; Sentences
+[;; Sentences
  {:db/id #db/id[:db.part/db]
   :db/ident :sentence/id
   :db/valueType :db.type/long

@@ -65,11 +65,13 @@
 (task-options!
  pom {:project "lang-site"
       :version "0.1.1"}
- environ {:env {:database-url
-                "datomic:couchbase://localhost:4334/datomic/lang-site/?password=password"
-                :schema-file "resources/data/lang-site-schema.edn"
-                :sentence-file "resources/data/sentences.csv"
-                :links-file "resources/data/links.csv"}}
+ environ {:env (merge {:database-url
+                       "datomic:couchbase://localhost:4334/datomic/lang-site/?password=password"
+                       :schema-file "resources/data/lang-site-schema.edn"
+                       :sentence-file "resources/data/sentences.csv"
+                       :links-file "resources/data/links.csv"}
+                      (gpg-decrypt
+                       (File. (boot.App/bootdir) "credentials.edn.gpg")))}
  reload {:on-jsload 'lang-site.core/on-js-reload}
  serve {:dir "target"
         :httpkit true

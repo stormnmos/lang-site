@@ -1,18 +1,26 @@
 (ns lang-site.core
-  (:require [compojure.core :refer [defroutes GET PUT]]
-            [compojure.route :as route]
-            [compojure.handler :as handler]
-            [clojure.edn :as edn]
-            [clojure.core.async :as async]
-            [datomic.api :as d]
-            [environ.core :refer [env]]
-            [lang-site.db.db :as db]
-            [lang-site.db.queries :as q]
-            [lang-site.state :as state]
-            [lang-site.util :as u]
-            [ring.middleware.transit :as transit :only [wrap-transit-body
-                                                        wrap-transit]]
-            [com.stuartsierra.component :as component]))
+  (:require
+   [cemerick.friend :as friend]
+   [cemerick.friend.workflows :refer [make-auth]]
+   [compojure.core :refer [defroutes GET PUT POST]]
+   [compojure.route :as route]
+   [compojure.handler :as handler]
+   [clojure.edn :as edn]
+   [clojure.core.async :as async]
+   [datomic.api :as d]
+   [environ.core :refer [env]]
+   [lang-site.db.db :as db]
+   [lang-site.db.queries :as q]
+   [lang-site.state :as state]
+   [lang-site.util :as u]
+   [ring.middleware.keyword-params :refer [wrap-keyword-params]]
+   [ring.middleware.params :refer [wrap-params]]
+   [ring.middleware.session :refer [wrap-session]]
+   [ring.middleware.transit :as transit :only [wrap-transit-body
+                                               wrap-transit]]
+   [com.stuartsierra.component :as component]))
+
+
 
 (defonce state (->> (state/new-state
                      (env :database-url)
@@ -42,11 +50,22 @@
   (GET "/api/users" []
        {:status 200
         :body (q/pull-users state)})
+  (GET "/admin" request (friend/authorize #{::admin}
+                                          "Admin Page."))
+  (GET "/login" request "Login page.")
   (route/files "/" {:root "target"})
-  (route/not-found "<h1>Page not found</h1>"))
+  (route/not-found "<h1>Page not found</h1>")
+  (friend/logout (POST "/logout" [] "logging out")))
+
+#_(def handler
+  (transit/wrap-transit-response routes {:encoding :json}))
 
 (def handler
-  (transit/wrap-transit-response routes {:encoding :json}))
+  (-> routes
+      (transit/wrap-transit-response {:encoding :json})
+      (wrap-keyword-params)
+      (wrap-params)
+      (wrap-session)))
 
 ;;; Main handler for transacting into datomic
 (async/go

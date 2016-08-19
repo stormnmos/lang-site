@@ -55,27 +55,40 @@
                 [_ :sentence/group ?val]]
               (u/get-db state))))
 
+(defn pull-many-translation-pair
+  [state n]
+  (->> (d/datoms (u/get-db state) :avet :sentence/group)
+       (map :v)
+       (shuffle)
+       (take n)))
+
 (defn pull-translation-pair
 ([state]
-(pull-translation-pair state (sample-sentence-group-squuid state)))
+ (pull-translation-pair state
+                        (->> (d/datoms (u/get-db state) :avet :sentence/group)
+                            (mapv :v)
+                            (rand-nth))))
 ([state squuid]
- (d/q '[:find [(pull ?e1 [:db/id
-                          :sentence/id
-                          {:sentence/language [:db/ident]}
-                          :sentence/group
-                          :sentence/text])
-               (pull ?e2 [:db/id
-                          :sentence/id
-                          {:sentence/language [:db/ident]}
-                          :sentence/group
-                          :sentence/text])]
-       :in $ ?squuid
-       :where
-       [?e1 :sentence/group ?squuid]
-       [?e1 :sentence/language :sentence.language/eng]
-       [?e2 :sentence/group ?squuid]
-       [?e2 :sentence/language :sentence.language/tur]]
-(u/get-db state) squuid)))
+ (let [result (d/q '[:find [(pull ?e1 [:db/id
+                                       :sentence/id
+                                       {:sentence/language [:db/ident]}
+                                       :sentence/group
+                                       :sentence/text])
+                            (pull ?e2 [:db/id
+                                       :sentence/id
+                                       {:sentence/language [:db/ident]}
+                                       :sentence/group
+                                       :sentence/text])]
+                     :in $ ?squuid
+                     :where
+                     [?e1 :sentence/group ?squuid]
+                     [?e1 :sentence/language :sentence.language/eng]
+                     [?e2 :sentence/group ?squuid]
+                     [?e2 :sentence/language :sentence.language/tur]]
+                   (u/get-db state) squuid)]
+   (if (nil? result)
+     (pull-translation-pair state)
+     result))))
 
 (defn pull-schema [state]
   (d/q '[:find (pull ?e [*]) .

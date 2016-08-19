@@ -6,6 +6,7 @@
             [lang-site.db :as db]
             [lang-site.util :as u]
             [lang-site.requests :as req]
+            [lang-site.components.templates :as t]
             [sablono.core :as sab :include-macros true]
             [cljs.core.async :as async :refer [<! >! put! take!]])
   (:require-macros
@@ -13,7 +14,7 @@
 
 (defprotocol Widget
   (children-tree [this])
-  (remote-call [this])
+  (remote [this])
   (local-call [this])
   (template [this data])
   (query [this]))
@@ -74,6 +75,25 @@
             (db/get-widgets db [:header :header-drawer])]
         (template this [header header-drawer])))))
 
+(defmethod widgets :register-card [[eid db] owner]
+  (reify
+    Widget
+    (template [this _]
+      (sab/html
+       [:.mdl-card.mdl-shadow--4dp.register-user-card
+        [:.mdl-card__title-text
+         [:.h2.mdl-card__title-text (str "Register")]]
+        [:.mdl-card__supporting-text.mdl-card--border
+         [:form {:action "#"}
+          [:.mdl-textfield.mdl-js-textfield
+           [:input.mdl-textfield__input {:type "text" :id (str "register" eid)}]
+           [:label.mdl-textfield__label {:for (str "register" eid)}
+            "Username"]]]]
+        [:.mdl-card__actions.mdl-card--border]]))
+    om/IRender
+    (render [this]
+      (template this nil))))
+
 (defmethod widgets :card [[eid db] owner]
   (reify
     Widget
@@ -88,14 +108,22 @@
                            [:span.mdl-list__item-primary-content
                             (str (:sentence/text text) "\n")]])
                texts)]]
+        [:form {:action "#"}
+         [:.mdl-textfield.mdl-js-textfield.mdl-textfield--floating-label
+          [:input.mdl-textfield__input {:type "text" :id (str "translation" eid)}]
+          [:label.mdl-textfield__label {:for (str "translation" eid)}
+           "Translation"]]]
         [:.mdl-card__actions.mdl-card--border
          [:a.mdl-button.mdl-button--colored.mdl-js-button.mdl-js-ripple-effect
           {:on-click #(a/next-card eid db
-                                   (:events (om/get-shared owner)))}
+                                   (:events (om/get-shared owner)))
+           :disabled false}
           "Next Sentence"]]
         [:.mdl-card__menu
          [:button.mdl-button.mdl-button--icon.mdl-js-button.mdl-js-ripple-effect
           [:i.material-icons "person"]]]]))
+    (remote [this]
+      "/translation-group")
     om/IRender
     (render [this]
       (let [title (db/g db :card/title eid)
@@ -104,7 +132,7 @@
     om/IDidMount
     (did-mount [this]
       (if (> 10 (count (d/datoms db :avet :widget/type :card)))
-        (mapv #(req/request "/translation-group" a/card-request-handler)
+        (mapv #(req/http-get (remote this) t/card)
               (range 30))))))
 
 (defmethod widgets :grid [[eid db] owner]
@@ -128,6 +156,7 @@
       (let [db @conn
             header        (db/get-widget db :header)
             header-drawer (db/get-widget db :header-drawer)
-            grid          (db/get-widget db :grid)]
+            grid          (db/get-widget db :grid)
+            register      (db/get-widget db :register-card)]
         (sab/html [:.mdl-layout.mdl-js-layout.mdl-layout--fixed-header
-                   (u/make-all widgets [header header-drawer grid])])))))
+                   (u/make-all widgets [header header-drawer grid register])])))))

@@ -28,16 +28,19 @@
 (defonce test-db (db/populate-db! conn))
 
 (defroute api-schema "/api/schema" []
-  (req/request "/api/schema"))
+  (req/http-get "/api/schema" identity))
 
 (defroute users "#/api/users" []
-  (req/request "/api/users"))
+  (req/http-get "/api/users" identity))
+
+(defroute register "/#api/register" []
+  (req/http-get "/api/users" identity))
 
 (defroute language-ids "/language-ids" []
   nil)
 
 (defroute translation-group "#/translation-group" []
-  (req/request "/translation-group"))
+  (req/http-get "/translation-group" templates/card))
 
 (defn run []
   (go

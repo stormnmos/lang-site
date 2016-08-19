@@ -1,32 +1,18 @@
 (ns lang-site.requests
   (:require
    [ajax.core :as ajax :refer [GET POST]]
+   [cljs-http.client :as http]
+   [cljs.core.async :as async :refer [<! >!]]
    [datascript.core :as d]
    [lang-site.state :as state]
    [lang-site.components.templates :as templates]
-   [secretary.core :as secretary :refer-macros [defroute]]))
+   [secretary.core :as secretary :refer-macros [defroute]])
+  (:require-macros
+   [cljs.core.async.macros :refer [go]]))
 
-(defn req
-  [uri method handler]
-  (ajax/ajax-request
-   {:uri uri
-    :method method
-    :handler handler
-    :format (ajax/transit-request-format)
-    :response-format (ajax/transit-response-format)}))
-
-(defmulti request
-  (fn [uri handler]
-    uri))
-
-(defmethod request "/translation-group"
-  [uri handler]
-  (req uri :get handler))
-
-(defmethod request "/api/schema"
-  [uri handler]
-  (req uri :get handler))
-
-(defmethod request "/api/users"
-  [uri handler]
-  (req uri :get handler))
+(defn http-get [uri template]
+  (async/pipe
+   (http/get uri {:channel (async/chan 1 (comp (map :body)
+                                               (map templates/card)
+                                               (map vector)))})
+   state/events false))

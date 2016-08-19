@@ -71,4 +71,6 @@
     :widget/type :card
     :card/title "Card 2"
     :card/sentences [-2 -1]
-    :card/content "asdfasdf"}])
+    :card/content "asdfasdf"}
+   {:db/id -103
+    :widget/type :register-card}])
