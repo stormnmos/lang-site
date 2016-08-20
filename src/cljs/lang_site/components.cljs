@@ -6,6 +6,7 @@
             [lang-site.db :as db]
             [lang-site.util :as u]
             [lang-site.requests :as req]
+          #_[lang-site.state :refer [tx-chan]]
             [lang-site.components.templates :as t]
             [sablono.core :as sab :include-macros true]
             [cljs.core.async :as async :refer [<! >! put! take!]])

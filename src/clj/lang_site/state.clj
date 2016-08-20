@@ -1,20 +1,18 @@
 (ns lang-site.state
-  (:require [com.stuartsierra.component :as component]
-            [datomic.api :as d]))
+  (:require
+   [clojure.core.async :refer [chan sliding-buffer]]
+   [environ.core :refer [env]]
+   [mount.core :refer [defstate]]
+   [datomic.api :as d]))
 
-(defrecord State [url tx-chan fail-chan
-                  success-chan connection]
-  component/Lifecycle
-  (start [component]
-    (println ";; Creating application state")
-    (let [conn (d/connect url)]
-      (assoc component :connection conn)))
-  (stop [component]
-    (println ";; Destroying application state")
-    (assoc component :connection nil)))
+(defstate conn
+  :start (d/connect (env :database-url)))
 
-(defn new-state [url tx-chan fail-chan success-chan]
-  (map->State {:url url
-               :tx-chan tx-chan
-               :fail-chan fail-chan
-               :success-chan success-chan}))
+(defstate tx-chan
+  :start (chan 10))
+
+(defstate fail-chan
+  :start (chan (sliding-buffer 10)))
+
+(defstate success-chan
+  :start (chan (sliding-buffer 10))  )

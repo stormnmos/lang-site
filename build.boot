@@ -41,13 +41,15 @@
                  [om-sync "0.1.1"]
                  [ring-transit "0.1.6"]
                  [com.cognitect/transit-cljs "0.8.239"]
-                 [com.cemerick/friend "0.2.3"]
                  ;; Server Side Requirements
                  [ring "1.5.0"]
                  [compojure "1.5.1"]
                  [com.stuartsierra/component "0.3.1"]
+                 [mount "0.1.10"]
+                 [buddy "1.0.0"]
                  ;; Client and Server
                  [datascript-transit "0.2.1"]
+                 [bidi "2.0.9"]
                  ;; Fix for boot-less
                  [org.slf4j/slf4j-nop "1.7.13" :scope "test"]
                  ;; Datomic requirements
@@ -65,13 +67,11 @@
 (task-options!
  pom {:project "lang-site"
       :version "0.1.1"}
- environ {:env (merge {:database-url
-                       "datomic:couchbase://localhost:4334/datomic/lang-site/?password=password"
-                       :schema-file "resources/data/lang-site-schema.edn"
-                       :sentence-file "resources/data/sentences.csv"
-                       :links-file "resources/data/links.csv"}
-                      (gpg-decrypt
-                       (File. (boot.App/bootdir) "credentials.edn.gpg")))}
+ environ {:env {:database-url
+                "datomic:couchbase://localhost:4334/datomic/lang-site/?password=password"
+                :schema-file "resources/data/lang-site-schema.edn"
+                :sentence-file "resources/data/sentences.csv"
+                :links-file "resources/data/links.csv"}}
  reload {:on-jsload 'lang-site.core/on-js-reload}
  serve {:dir "target"
         :httpkit true
