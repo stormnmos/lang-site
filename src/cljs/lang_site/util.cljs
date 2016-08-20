@@ -3,7 +3,7 @@
             [om.core :as om]))
 
 (defn make [f eid]
-  (om/build f eid {:react-key (first eid)}))
+  (om/build f eid {:react-key eid}))
 
 (defn make-all [f eids]
   (map (partial make f) eids))

@@ -1,5 +1,8 @@
 (ns lang-site.handler
   (:require [bidi.ring :refer (make-handler)]
+            [compojure.core :refer [defroutes GET PUT POST ANY]]
+            [compojure.route :as route]
+            [compojure.handler :as handler]
             [lang-site.db.queries :as q]
             [ring.util.response :as res]))
 
@@ -26,5 +29,24 @@
 (def handler
   (make-handler ["/" {"index.html" index-handler
                       ["articles/" :id "/article.html"] article-handler
-                      "translation-group" translation-group-handler
-                      true :not-found}]))
+                      "translation-group" translation-group-handler}]))
+
+(defroutes routes
+  (GET "/translation-group" []
+       {:status 200
+        :body  (q/pull-translation-pair)})
+  (GET "/translation-group/:squuid" [squuid]
+       (pr-str (q/pull-translation-pair squuid)))
+  (GET "/api/echo" request
+       {:status 200
+        :headers {"Content-Type" "application/transit"}
+        :body request})
+  (GET "/api/schema" []
+       {:status 200
+        :body (q/pull-schema)})
+  (GET "/api/users" []
+       {:status 200
+        :body (q/pull-users)})
+  (GET "/login" request "Login page.")
+  (route/files "/" {:root "target"})
+  (route/not-found "<h1>Page not found</h1>"))

@@ -6,7 +6,7 @@
             [lang-site.db :as db]
             [lang-site.util :as u]
             [lang-site.requests :as req]
-          #_[lang-site.state :refer [tx-chan]]
+            [lang-site.state :refer [conn]]
             [lang-site.components.templates :as t]
             [sablono.core :as sab :include-macros true]
             [cljs.core.async :as async :refer [<! >! put! take!]])
@@ -21,10 +21,10 @@
   (query [this]))
 
 (defmulti widgets
-  (fn [[eid db] _]
-    (db/g db :widget/type eid)))
+  (fn [eid _]
+    (db/g :widget/type eid)))
 
-(defmethod widgets :header [[eid db] owner]
+(defmethod widgets :header [eid owner]
   (reify
     Widget
     (query [this]
@@ -41,11 +41,11 @@
                links)]]]))
     om/IRender
     (render [this]
-      (let [[des pq] (query this)
-            content (des (d/pull db pq eid))]
+      (let [[destructure pull-query] (query this)
+            content (destructure (d/pull (d/db @conn) pull-query eid))]
         (template this ["Language Site" content])))))
 
-(defmethod widgets :header-drawer [[eid db] owner]
+(defmethod widgets :header-drawer [eid owner]
   (reify
     Widget
     (query [this]
@@ -61,10 +61,10 @@
     om/IRender
     (render [this]
       (let [[des pq] (query this)
-            content (des (d/pull db pq eid))]
+            content (des (d/pull (d/db @conn) pq eid))]
         (template this ["Header-drawer" content])))))
 
-(defmethod widgets :page [[eid db] owner]
+(defmethod widgets :page [eid owner]
   (reify
     Widget
     (template [this [header header-drawer]]
@@ -73,10 +73,10 @@
     om/IRender
     (render [this]
       (let [[[header] [header-drawer]]
-            (db/get-widgets db [:header :header-drawer])]
+            (db/get-widgets [:header :header-drawer])]
         (template this [header header-drawer])))))
 
-(defmethod widgets :register-card [[eid db] owner]
+(defmethod widgets :register-card [eid owner]
   (reify
     Widget
     (template [this _]
@@ -95,7 +95,7 @@
     (render [this]
       (template this nil))))
 
-(defmethod widgets :card [[eid db] owner]
+(defmethod widgets :card [eid owner]
   (reify
     Widget
     (template [this [owner title texts]]
@@ -116,7 +116,7 @@
            "Translation"]]]
         [:.mdl-card__actions.mdl-card--border
          [:a.mdl-button.mdl-button--colored.mdl-js-button.mdl-js-ripple-effect
-          {:on-click #(a/next-card eid db
+          {:on-click #(a/next-card eid (d/db @conn)
                                    (:events (om/get-shared owner)))
            :disabled false}
           "Next Sentence"]]
@@ -127,16 +127,16 @@
       "/translation-group")
     om/IRender
     (render [this]
-      (let [title (db/g db :card/title eid)
-            texts (db/gets db {:card/sentences [:sentence/text]} eid)]
+      (let [title (db/g :card/title eid)
+            texts (db/gets {:card/sentences [:sentence/text]} eid)]
         (template this [owner title texts])))
     om/IDidMount
     (did-mount [this]
-      (if (> 10 (count (d/datoms db :avet :widget/type :card)))
+      (if (> 10 (count (d/datoms (d/db @conn) :avet :widget/type :card)))
         (mapv #(req/http-get (remote this) t/card)
               (range 30))))))
 
-(defmethod widgets :grid [[eid db] owner]
+(defmethod widgets :grid [eid owner]
   (reify
     Widget
     (template [this [components]]
@@ -147,7 +147,7 @@
              (sort-by first components))]))
     om/IRender
     (render [this]
-      (let [components (db/get-ui-comps db :app/grid-components)]
+      (let [components (db/get-ui-comps :app/grid-components)]
         (template this [components])))))
 
 (defn widget [conn owner]
@@ -155,9 +155,10 @@
     om/IRender
     (render [this]
       (let [db @conn
-            header        (db/get-widget db :header)
-            header-drawer (db/get-widget db :header-drawer)
-            grid          (db/get-widget db :grid)
-            register      (db/get-widget db :register-card)]
+            header        (db/get-widget :header)
+            header-drawer (db/get-widget :header-drawer)
+            grid          (db/get-widget :grid)
+            register      (db/get-widget :register-card)
+            card          (db/get-widget :card)]
         (sab/html [:.mdl-layout.mdl-js-layout.mdl-layout--fixed-header
-                   (u/make-all widgets [header header-drawer grid register])])))))
+                   (u/make-all widgets [header header-drawer card #_  grid #_ register])])))))

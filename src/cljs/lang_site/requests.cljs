@@ -4,7 +4,7 @@
    [cljs-http.client :as http]
    [cljs.core.async :as async :refer [<! >!]]
    [datascript.core :as d]
-   [lang-site.state :as state]
+   [lang-site.state :refer [events]]
    [lang-site.components.templates :as templates]
    [secretary.core :as secretary :refer-macros [defroute]])
   (:require-macros
@@ -15,4 +15,4 @@
    (http/get uri {:channel (async/chan 1 (comp (map :body)
                                                (map templates/card)
                                                (map vector)))})
-   state/events false))
+   @events false))

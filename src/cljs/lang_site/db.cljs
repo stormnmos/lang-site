@@ -1,84 +1,80 @@
 (ns lang-site.db
   (:require [datascript.core :as d]
             [datascript.db :as ddb]
-            [lang-site.db.mock-data :as m]))
+            [lang-site.state :refer [conn]]))
 
-(defn create-db []
-  (d/create-conn m/schema))
-
-(defn populate-db! [conn]
-  (d/transact! conn m/fixtures))
-
-(defn pea [db att]
+(defn pea [att]
   (d/q '[:find (pull ?e [*])
          :in $ ?a
-         :where [?e ?a]] db att))
+         :where [?e ?a]] (d/db @conn) att))
 
-(defn pvea [db eid att]
+(defn pvea [eid att]
   (d/q '[:find (pull ?v [*])
          :in $ ?e ?a
-         :where [?e ?a ?v]] db eid att))
+         :where [?e ?a ?v]] (d/db @conn) eid att))
 
-(defn vea [db eid att]
+(defn vea [eid att]
   (d/q '[:find ?v .
          :in $ ?e ?a
          :where [?e ?a ?v]]
-       db eid att))
+       (d/db @conn) eid att))
 
-(defn eav [db att v]
+(defn eav [att v]
   (d/q '[:find ?e
          :in $ ?a ?v
          :where [?e ?a ?v]]
-       db att v))
+       (d/db @conn) att v))
 
-(defn ea [db att]
+(defn ea [att]
   (d/q '[:find ?e
          :in $ ?a
          :where [?e ?a]]
-       db att))
+       (d/db @conn) att))
 
-(defn g [db att eid]
-  (att (d/pull db [att] eid)))
+(defn p [dest pull-query eid]
+  (dest (d/pull (d/db @conn) pull-query eid)))
 
-(defn gets [db att eid]
-  ((first (keys att)) (d/pull db [att] eid)))
+(defn g [att eid]
+  (att (d/pull (d/db @conn) [att] eid)))
 
-(defn gv [db atts eid]
-  (map (fn [att] (g db att eid)) atts))
+(defn gets [att eid]
+  ((first (keys att)) (d/pull (d/db @conn) [att] eid)))
+
+(defn gv [atts eid]
+  (map (fn [att] (g att eid)) atts))
 
 (defn children
-  ([db eid]
-   (map conj (eav db :widget/owner eid) (repeat db)))
-  ([db vals eid]))
+  ([eid]
+   (map conj (eav :widget/owner eid) (repeat (d/db @conn))))
+  ([vals eid]))
 
-(defn ordered-children [db eid]
+(defn ordered-children [eid]
   (apply map vector
-         [(->> (d/pull db [{:widget/_owner [:db/id :widget/order]}] eid)
+         [(->> (d/pull (d/db @conn)
+                       [{:widget/_owner [:db/id :widget/order]}] eid)
                 :widget/_owner
                 (sort-by :widget/order)
                 (map :db/id))
-          (repeat db)]))
+          (repeat (d/db @conn))]))
 
-(defn get-widgets [db type]
-  (map conj (d/q '[:find ?e
-                   :in $ ?v
-                   :where [?e :widget/type ?v]]
-                 db type)
-       (repeat db)))
+(defn get-widgets [type]
+  (d/q '[:find ?e
+           :in $ ?v
+           :where [?e :widget/type ?v]]
+         (d/db @conn) type))
 
-(defn get-widget [db type]
-  [(d/q '[:find ?e .
-          :in $ ?v
-          :where [?e :widget/type ?v]]
-        db type)
-   db])
+(defn get-widget [type]
+  (d/q '[:find (min ?e) .
+           :in $ ?v
+           :where [?e :widget/type ?v]]
+         (d/db @conn) type))
 
-(defn get-ui-att [db att]
-  (g db att 0))
+(defn get-ui-att [att]
+  (g att 0))
 
-(defn get-ui-comps [db att]
-  (mapv (fn [eid] [(:db/id eid) db])
-        (att (d/pull db [{att [:db/id]}] 0))))
+(defn get-ui-comps [att]
+  (mapv (fn [eid] [(:db/id eid) (d/db @conn)])
+        (att (d/pull (d/db @conn) [{att [:db/id]}] 0))))
 
 (defn set-att [eid att val]
   {:db/id eid
@@ -87,11 +83,11 @@
 (defn set-content [eid content]
   (set-att eid :widget/content content))
 
-(defn get-att [db att]
+(defn get-att [att]
   (d/q '[:find ?v .
          :in $ ?a
          :where [_ ?a ?v]]
-       db att))
+       (d/db @conn) att))
 
 #_(defn cas [db e a ov nv]
   (let [e (ddb/entid-strict db e)

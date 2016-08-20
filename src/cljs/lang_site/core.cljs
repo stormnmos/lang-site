@@ -1,12 +1,15 @@
 (ns lang-site.core
   (:require
+   [mount.core :as mount]
    [ajax.core :as ajax :refer [GET POST]]
    [lang-site.actions :as a]
    [lang-site.db :as db]
    [lang-site.components :as c]
    [lang-site.components.templates :as templates]
    [lang-site.requests :as req]
-   [lang-site.state :as state]
+   [lang-site.state :as state :refer [conn events transactions
+                                      card-queue card-eid-queue]]
+
    [cognitect.transit :as t]
    [datascript.core :as d]
    [goog.dom :as gdom]
@@ -21,11 +24,6 @@
   (:import goog.History))
 
 (enable-console-print!)
-
-(secretary/set-config! :prefix "#")
-
-(defonce conn (db/create-db))
-(defonce test-db (db/populate-db! conn))
 
 (defroute api-schema "/api/schema" []
   (req/http-get "/api/schema" identity))
@@ -43,11 +41,13 @@
   (req/http-get "/translation-group" templates/card))
 
 (defn run []
+  (secretary/set-config! :prefix "#")
+  (mount/start)
   (go
     (while true
-      (let [tx (<! state/events)]
+      (let [tx (<! @events)]
         (.log js/console (pr-str tx))
-        (try (d/transact! conn tx)
+        (try (d/transact! @conn tx)
              (catch js/Object e
                (.log js/console e))))))
   (let [history (History.)]
@@ -55,14 +55,14 @@
                    (fn [event]
                      (secretary/dispatch! (.-token event))))
     (.setEnabled history true))
-  (om/root c/widget conn
-           {:shared {:events state/events}
+  (om/root c/widget @conn
+           {:shared {:events @events}
             :target (. js/document (getElementById "app"))}))
 
 (defonce app run)
 
 (defn on-js-reload []
-  (om/root c/widget conn
+  (om/root c/widget @conn
            {:react-key "root"
-            :shared {:events state/events}
+            :shared {:events @events}
             :target (. js/document (getElementById "app"))}))
