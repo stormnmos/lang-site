@@ -6,7 +6,7 @@
             [lang-site.db :as db]
             [lang-site.util :as u]
             [lang-site.requests :as req]
-            [lang-site.state :refer [conn]]
+            [lang-site.state :refer [conn events]]
             [lang-site.components.templates :as t]
             [sablono.core :as sab :include-macros true]
             [cljs.core.async :as async :refer [<! >! put! take!]])
@@ -24,7 +24,14 @@
   (fn [eid _]
     (db/g :widget/type eid)))
 
-(defmethod widgets :header [eid owner]
+(defmethod widgets :default [eid]
+  (reify
+    om/IRender
+    (render [this]
+      (sab/html
+       [:.default (str "Default Component, eid: " eid)]))))
+
+(defmethod widgets :header [eid]
   (reify
     Widget
     (query [this]
@@ -45,7 +52,7 @@
             content (destructure (d/pull (d/db @conn) pull-query eid))]
         (template this ["Language Site" content])))))
 
-(defmethod widgets :header-drawer [eid owner]
+(defmethod widgets :header-drawer [eid]
   (reify
     Widget
     (query [this]
@@ -64,7 +71,7 @@
             content (des (d/pull (d/db @conn) pq eid))]
         (template this ["Header-drawer" content])))))
 
-(defmethod widgets :page [eid owner]
+(defmethod widgets :page [eid]
   (reify
     Widget
     (template [this [header header-drawer]]
@@ -76,7 +83,7 @@
             (db/get-widgets [:header :header-drawer])]
         (template this [header header-drawer])))))
 
-(defmethod widgets :register-card [eid owner]
+(defmethod widgets :register-card [eid]
   (reify
     Widget
     (template [this _]
@@ -95,10 +102,10 @@
     (render [this]
       (template this nil))))
 
-(defmethod widgets :card [eid owner]
+(defmethod widgets :card [eid]
   (reify
     Widget
-    (template [this [owner title texts]]
+    (template [this [title texts]]
       (sab/html
        [:.mdl-card.mdl-shadow--4dp.language-card
         [:.mdl-card__title-text
@@ -116,8 +123,7 @@
            "Translation"]]]
         [:.mdl-card__actions.mdl-card--border
          [:a.mdl-button.mdl-button--colored.mdl-js-button.mdl-js-ripple-effect
-          {:on-click #(a/next-card eid (d/db @conn)
-                                   (:events (om/get-shared owner)))
+          {:on-click #(a/next-card eid)
            :disabled false}
           "Next Sentence"]]
         [:.mdl-card__menu
@@ -129,17 +135,23 @@
     (render [this]
       (let [title (db/g :card/title eid)
             texts (db/gets {:card/sentences [:sentence/text]} eid)]
-        (template this [owner title texts])))
+        (template this [title texts])))
     om/IDidMount
     (did-mount [this]
       (if (> 10 (count (d/datoms (d/db @conn) :avet :widget/type :card)))
         (mapv #(req/http-get (remote this) t/card)
-              (range 30))))))
+              (range 30))))
+    #_ om/IShouldUpdate
+    #_ (should-update [_ _ _]
+         true)))
 
-(defmethod widgets :grid [eid owner]
+(defmethod widgets :grid [eid]
   (reify
     Widget
+    (query [this]
+      (db/get-ui-comps :app/grid-components))
     (template [this [components]]
+      (.log js/console components)
       (sab/html
        [:.mdl-grid
         (map (fn [component]
@@ -147,10 +159,13 @@
              (sort-by first components))]))
     om/IRender
     (render [this]
-      (let [components (db/get-ui-comps :app/grid-components)]
-        (template this [components])))))
+      (let [components (query this)]
+        (template this [components])))
+    om/IShouldUpdate
+    (should-update [this _ _]
+      true)))
 
-(defn widget [conn owner]
+(defn widget [_]
   (reify
     om/IRender
     (render [this]
@@ -161,4 +176,4 @@
             register      (db/get-widget :register-card)
             card          (db/get-widget :card)]
         (sab/html [:.mdl-layout.mdl-js-layout.mdl-layout--fixed-header
-                   (u/make-all widgets [header header-drawer card #_  grid #_ register])])))))
+                   (u/make-all widgets [header header-drawer grid #_ register])])))))

@@ -73,7 +73,7 @@
   (g att 0))
 
 (defn get-ui-comps [att]
-  (mapv (fn [eid] [(:db/id eid) (d/db @conn)])
+  (mapv (fn [eid] (:db/id eid))
         (att (d/pull (d/db @conn) [{att [:db/id]}] 0))))
 
 (defn set-att [eid att val]

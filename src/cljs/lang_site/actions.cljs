@@ -6,7 +6,7 @@
    [om.core :as om]
    [lang-site.components.templates :as templates]
    [lang-site.db :as db]
-   [lang-site.state :as state]
+   [lang-site.state :as state :refer [conn events]]
    [lang-site.requests :as req])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
@@ -48,12 +48,14 @@
 (defn validate-card [eid db]
   "confirm that eid should be deleted")
 
-(defn next-card [eid db events]
-  (let [next (first (filter #(< eid %)
-                            (map :e (d/datoms db :avet :widget/type :card))))]
-    (transact! events [[:db.fn/cas 0 :app/grid-components
-                        eid next]
-                       [:db.fn/retractEntity eid]])))
+(defn next-card [eid]
+  (let [next (->> (d/datoms (d/db @conn) :avet :widget/type :card)
+                  (map :e)
+                  (filter #(< eid %))
+                  (first))]
+    (transact! @events [[:db.fn/cas 0 :app/grid-components
+                         eid next]
+                        [:db.fn/retractEntity eid]])))
 
 (defn get-card-eids []
   (d/datoms :avet :card/title))

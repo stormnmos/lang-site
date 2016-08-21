@@ -44,7 +44,6 @@
                  ;; Server Side Requirements
                  [ring "1.5.0"]
                  [compojure "1.5.1"]
-                 [com.stuartsierra/component "0.3.1"]
                  [mount "0.1.10"]
                  [buddy "1.0.0"]
                  ;; Client and Server
