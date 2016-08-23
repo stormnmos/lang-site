@@ -19,14 +19,16 @@
    :app/grid-components
    {:db/cardinality :db.cardinality/many
     :db/valueType :db.type/ref}
+   :grid/components
+   {:db/cardinality :db.cardinality/many
+    :db/valueType :db.type/ref}
    :widget/type
    {:db/index true}})
 
 (def fixtures
   [{:db/id 0
     :app/title "Hello, DataScript!"
-    :app/count 0
-    :app/grid-components [-101]}
+    :app/count 0}
    {:db/id -1
     :widget/type :sentence
     :sentence/text "First Sentence\n"
@@ -59,7 +61,8 @@
     :widget/content [-5 -6 -7]}
    {:db/id -9
     :widget/type :grid
-    :grid/data "Placeholder"}
+    :grid/data "Placeholder"
+    :grid/components [-101]}
    {:db/id -100
     :widget/type :page}
    {:db/id -101

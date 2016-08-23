@@ -9,14 +9,14 @@
    [lang-site.requests :as req]
    [lang-site.state :as state :refer [conn events transactions
                                       card-queue card-eid-queue]]
-
    [cognitect.transit :as t]
    [datascript.core :as d]
    [goog.dom :as gdom]
    [goog.events :as events]
    [om.core :as om :include-macros true]
    [sablono.core :as sab :refer-macros [html]]
-   [cljs.core.async :as async :refer [<! >! put! take!]]
+   [cljs.core.async :as async :refer [<! >! chan put! take!
+                                      poll! offer! mult tap]]
    [secretary.core :as secretary :refer-macros [defroute]]
    [cljs.pprint :as pprint])
   (:require-macros

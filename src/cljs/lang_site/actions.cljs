@@ -53,7 +53,7 @@
                   (map :e)
                   (filter #(< eid %))
                   (first))]
-    (transact! @events [[:db.fn/cas 0 :app/grid-components
+    (transact! @events [[:db.fn/cas 9 :grid/components
                          eid next]
                         [:db.fn/retractEntity eid]])))
 

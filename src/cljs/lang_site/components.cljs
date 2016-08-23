@@ -6,19 +6,19 @@
             [lang-site.db :as db]
             [lang-site.util :as u]
             [lang-site.requests :as req]
-            [lang-site.state :refer [conn events]]
+            [lang-site.state :refer [conn events transactions]]
             [lang-site.components.templates :as t]
             [sablono.core :as sab :include-macros true]
-            [cljs.core.async :as async :refer [<! >! put! take!]])
+            [cljs.core.async :as async :refer [<! >! chan put! take! tap]])
   (:require-macros
    [cljs.core.async.macros :refer [go go-loop]]))
 
 (defprotocol Widget
-  (children-tree [this])
-  (remote [this])
+  (children   [this])
+  (remote     [this])
   (local-call [this])
-  (template [this data])
-  (query [this]))
+  (template   [this data])
+  (query      [this db]))
 
 (defmulti widgets
   (fn [eid _]
@@ -34,7 +34,9 @@
 (defmethod widgets :header [eid]
   (reify
     Widget
-    (query [this]
+    (children [this]
+      nil)
+    (query [this db]
       [:widget/content [{:widget/content [:link/text]}]])
     (template [this [title links]]
       (sab/html
@@ -48,14 +50,16 @@
                links)]]]))
     om/IRender
     (render [this]
-      (let [[destructure pull-query] (query this)
+      (let [[destructure pull-query] (query this (d/db @conn))
             content (destructure (d/pull (d/db @conn) pull-query eid))]
         (template this ["Language Site" content])))))
 
 (defmethod widgets :header-drawer [eid]
   (reify
     Widget
-    (query [this]
+    (children [this]
+      nil)
+    (query [this db]
       [:widget/content [{:widget/content [:link/text]}]])
     (template [this [title links]]
       (sab/html
@@ -67,21 +71,21 @@
               links)]]))
     om/IRender
     (render [this]
-      (let [[des pq] (query this)
+      (let [[des pq] (query this (d/db @conn))
             content (des (d/pull (d/db @conn) pq eid))]
         (template this ["Header-drawer" content])))))
 
 (defmethod widgets :page [eid]
   (reify
     Widget
+    (children [this]
+      (db/get-widgets [:header :header-drawer]))
     (template [this [header header-drawer]]
       (sab/html [:.mdl-layout.mdl-js-layout.mdl-layout--fixed-header
                  (map u/make [header header-drawer])]))
     om/IRender
     (render [this]
-      (let [[[header] [header-drawer]]
-            (db/get-widgets [:header :header-drawer])]
-        (template this [header header-drawer])))))
+      (template this (children this)))))
 
 (defmethod widgets :register-card [eid]
   (reify
@@ -102,20 +106,31 @@
     (render [this]
       (template this nil))))
 
-(defmethod widgets :card [eid]
+(defmethod widgets :sentence [eid]
   (reify
     Widget
-    (template [this [title texts]]
+    (template [this text]
+      (sab/html
+       [:li.mdl-list__item
+        [:span.mdl-list__item-primary-content text]]))
+    (query [this db]
+      (d/touch (d/entity (d/db @conn) eid)))
+    om/IRender
+    (render [this]
+      (let [{:keys [sentence/text]} (query this (d/db @conn))]
+        (template this text)))))
+
+(defmethod widgets :card [eid owner]
+  (reify
+    Widget
+    (template [this [title sentences]]
       (sab/html
        [:.mdl-card.mdl-shadow--4dp.language-card
         [:.mdl-card__title-text
          [:h2.mdl-card__title-text (str "Card " eid)]]
         [:.mdl-card__supporting-text
          [:ul.mdl-list
-          (map (fn [text] [:li.mdl-list__item
-                           [:span.mdl-list__item-primary-content
-                            (str (:sentence/text text) "\n")]])
-               texts)]]
+          (u/make-all widgets (map :db/id  sentences))]]
         [:form {:action "#"}
          [:.mdl-textfield.mdl-js-textfield.mdl-textfield--floating-label
           [:input.mdl-textfield__input {:type "text" :id (str "translation" eid)}]
@@ -131,36 +146,60 @@
           [:i.material-icons "person"]]]]))
     (remote [this]
       "/translation-group")
+    (query [this db]
+      (d/touch (d/entity db eid)))
+    om/IInitState
+    (init-state [this]
+      {:listener (async/chan (async/sliding-buffer 10))})
     om/IRender
     (render [this]
-      (let [title (db/g :card/title eid)
-            texts (db/gets {:card/sentences [:sentence/text]} eid)]
-        (template this [title texts])))
+      (let [{:keys [card/title card/sentences]} (query this (d/db @conn))]
+        (template this [title sentences])))
+    om/IWillMount
+    (will-mount [this]
+      (let [listener (om/get-state owner :listener)]
+        (d/listen! @conn eid #(put! listener %))))
     om/IDidMount
     (did-mount [this]
       (if (> 10 (count (d/datoms (d/db @conn) :avet :widget/type :card)))
         (mapv #(req/http-get (remote this) t/card)
-              (range 30))))
-    #_ om/IShouldUpdate
-    #_ (should-update [_ _ _]
-         true)))
+              (range 10))))
+    om/IWillUnmount
+    (will-unmount [_]
+      (.log js/console (str "Unmounting: " eid))
+      (d/unlisten! @conn eid))
+    om/IShouldUpdate
+    (should-update [this _ _]
+      (when-let [tx-report (async/poll! (om/get-state owner :listener))]
+        (not (= (query this (:db-before tx-report))
+                (query this (:db-after  tx-report))))))))
 
-(defmethod widgets :grid [eid]
+(defmethod widgets :grid [eid owner]
   (reify
     Widget
-    (query [this]
-      (db/get-ui-comps :app/grid-components))
+    (query [this db]
+      (d/touch (d/entity db eid)))
     (template [this [components]]
-      (.log js/console components)
       (sab/html
        [:.mdl-grid
         (map (fn [component]
-               [:.mdl-cell.mdl-cell--3-col (u/make widgets component)])
+               [:.mdl-cell.mdl-cell--3-col (u/make widgets (:db/id component))])
              (sort-by first components))]))
+    om/IInitState
+    (init-state [this]
+      {:listener (async/chan (async/sliding-buffer 10))})
     om/IRender
     (render [this]
-      (let [components (query this)]
+      (let [{:keys [:grid/components]} (query this (d/db @conn))]
         (template this [components])))
+    om/IWillMount
+    (will-mount [this]
+      (let [listener (om/get-state owner :listener)]
+        (d/listen! @conn eid #(put! listener %))))
+    om/IWillUnmount
+    (will-unmount [_]
+      (.log js/console (str "Unmounting: " eid))
+      (d/unlisten! @conn eid))
     om/IShouldUpdate
     (should-update [this _ _]
       true)))
@@ -176,4 +215,7 @@
             register      (db/get-widget :register-card)
             card          (db/get-widget :card)]
         (sab/html [:.mdl-layout.mdl-js-layout.mdl-layout--fixed-header
-                   (u/make-all widgets [header header-drawer grid #_ register])])))))
+                   (u/make-all widgets [header
+                                        header-drawer
+                                        grid
+                                        register])])))))
