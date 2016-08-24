@@ -1,29 +1,29 @@
 (ns lang-site.db.mock-data)
 
 (def schema
-  {:translation/group
-   {:db/cardinality :db.cardinality/many
-    :db/valueType :db.type/ref}
-   :header/links
-   {:db/cardinality :db.cardinality/many
-    :db/valueType :db.type/ref}
-   :header-drawer/links
-   {:db/cardinality :db.cardinality/many
-    :db/valueType :db.type/ref}
-   :widget/content
-   {:db/cardinality :db.cardinality/many
-    :db/valueType :db.type/ref}
-   :card/sentences
-   {:db/cardinality :db.cardinality/many
-    :db/valueType :db.type/ref}
-   :app/grid-components
-   {:db/cardinality :db.cardinality/many
-    :db/valueType :db.type/ref}
-   :grid/components
-   {:db/cardinality :db.cardinality/many
-    :db/valueType :db.type/ref}
-   :widget/type
-   {:db/index true}})
+  {:translation/group     {:db/cardinality :db.cardinality/many
+                           :db/valueType   :db.type/ref
+                           :db/isComponent true}
+   :header/links          {:db/cardinality :db.cardinality/many
+                           :db/valueType   :db.type/ref
+                           :db/isComponent true}
+   :header-drawer/links   {:db/cardinality :db.cardinality/many
+                           :db/valueType   :db.type/ref
+                           :db/isComponent true}
+   :header/content        {:db/cardinality :db.cardinality/many
+                           :db/valueType   :db.type/ref
+                           :db/isComponent true}
+   :header-drawer/content {:db/cardinality :db.cardinality/many
+                           :db/valueType   :db.type/ref
+                           :db/isComponent true}
+   :card/sentences        {:db/cardinality :db.cardinality/many
+                           :db/valueType   :db.type/ref
+                           :db/isComponent true}
+   :grid/components       {:db/cardinality :db.cardinality/many
+                           :db/valueType   :db.type/ref
+                           :db/isComponent true}
+
+   :widget/type           {:db/index true}})
 
 (def fixtures
   [{:db/id 0
@@ -45,7 +45,7 @@
    {:db/id -4
     :widget/type :header
     :header/title "Language test site"
-    :widget/content [-5 -6 -7]}
+    :header/content [-5 -6 -7]}
    {:db/id -5
     :widget/type :link
     :link/text "Link1"}
@@ -58,7 +58,7 @@
    {:db/id -8
     :widget/type :header-drawer
     :header-drawer/title "Language test site"
-    :widget/content [-5 -6 -7]}
+    :header-drawer/content [-5 -6 -7]}
    {:db/id -9
     :widget/type :grid
     :grid/data "Placeholder"
@@ -74,6 +74,6 @@
     :widget/type :card
     :card/title "Card 2"
     :card/sentences [-2 -1]
-    :card/content "asdfasdf"}
+    :card/content [-2 -1]}
    {:db/id -103
     :widget/type :register-card}])
