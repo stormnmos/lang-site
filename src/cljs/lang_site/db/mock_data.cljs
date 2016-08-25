@@ -1,79 +1,28 @@
-(ns lang-site.db.mock-data)
+(ns lang-site.db.mock-data
+  (:require [lang-site.components.templates :as t]))
+
+(def component {:db/cardinality :db.cardinality/many
+                :db/valueType   :db.type/ref
+                :db/isComponent true})
 
 (def schema
-  {:translation/group     {:db/cardinality :db.cardinality/many
-                           :db/valueType   :db.type/ref
-                           :db/isComponent true}
-   :header/links          {:db/cardinality :db.cardinality/many
-                           :db/valueType   :db.type/ref
-                           :db/isComponent true}
-   :header-drawer/links   {:db/cardinality :db.cardinality/many
-                           :db/valueType   :db.type/ref
-                           :db/isComponent true}
-   :header/content        {:db/cardinality :db.cardinality/many
-                           :db/valueType   :db.type/ref
-                           :db/isComponent true}
-   :header-drawer/content {:db/cardinality :db.cardinality/many
-                           :db/valueType   :db.type/ref
-                           :db/isComponent true}
-   :card/sentences        {:db/cardinality :db.cardinality/many
-                           :db/valueType   :db.type/ref
-                           :db/isComponent true}
-   :grid/components       {:db/cardinality :db.cardinality/many
-                           :db/valueType   :db.type/ref
-                           :db/isComponent true}
-
+  {:header/content        component
+   :header-drawer/content component
+   :card/content          component
+   :grid/content          component
+   :page/content          component
    :widget/type           {:db/index true}})
 
 (def fixtures
-  [{:db/id 0
-    :app/title "Hello, DataScript!"
-    :app/count 0}
-   {:db/id -1
-    :widget/type :sentence
-    :sentence/text "First Sentence\n"
-    :sentence/group 100
-    :sentence/language :sentence.language/eng}
-   {:db/id -2
-    :widget/type :sentence
-    :sentence/text "Second Sentence\n"
-    :sentence/group 100
-    :sentence/language :sentence.language/tur}
-   {:db/id -3
-    :widget/type :translation
-    :translation/group #{-1 -2}}
-   {:db/id -4
-    :widget/type :header
-    :header/title "Language test site"
-    :header/content [-5 -6 -7]}
-   {:db/id -5
-    :widget/type :link
-    :link/text "Link1"}
-   {:db/id -6
-    :widget/type :link
-    :link/text "Link2"}
-   {:db/id -7
-    :widget/type :link
-    :link/text "Link3"}
-   {:db/id -8
-    :widget/type :header-drawer
-    :header-drawer/title "Language test site"
-    :header-drawer/content [-5 -6 -7]}
-   {:db/id -9
-    :widget/type :grid
-    :grid/data "Placeholder"
-    :grid/components [-101]}
-   {:db/id -100
-    :widget/type :page}
-   {:db/id -101
-    :widget/type :card
-    :card/title "Card 1"
-    :card/sentences [-1 -2]
-    :card/content [-1 -2]}
-   {:db/id -102
-    :widget/type :card
-    :card/title "Card 2"
-    :card/sentences [-2 -1]
-    :card/content [-2 -1]}
-   {:db/id -103
-    :widget/type :register-card}])
+  [(t/sentence-template -1 "First Sentence\n" 100 :sentence.language/eng)
+   (t/sentence-template -2 "Second Sentence\n" 100 :sentence.language/tur)
+   (t/header-template -4 "Language test site" [-5 -6 -7])
+   (t/link-template -5 "Link1")
+   (t/link-template -6 "Link2")
+   (t/link-template -7 "Link3")
+   (t/header-drawer-template -8 "Language test site" [-5 -6 -7])
+   (t/grid-template -9 "Placeholder" [-12])
+   (t/page-template -10 [-4 -8 -9 -14])
+   (t/card-template -12 "Card 1" [-1 -2])
+   (t/card-template -13 "Card 2" [-1 -2])
+   (t/register-card-template -14)])

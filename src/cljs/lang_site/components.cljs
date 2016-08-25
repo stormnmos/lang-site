@@ -31,7 +31,7 @@
 
 (defwidget :link
   (template [this {:keys [:link/text]}]
-    [:a.mdl-navigation__link {:href "#"} (:link/text text)]))
+    [:a.mdl-navigation__link {:href "#"} text]))
 
 (defwidget :header
   (template [this {:keys [:header/title :header/content]}]
@@ -68,13 +68,13 @@
      [:span.mdl-list__item-primary-content text]]))
 
 (defwidget :card
-  (template [this {:keys [:db/id card/title card/sentences]}]
+  (template [this {:keys [:db/id card/title card/content]}]
     [:.mdl-card.mdl-shadow--4dp.language-card
      [:.mdl-card__title-text
       [:h2.mdl-card__title-text (str "Card")]]
      [:.mdl-card__supporting-text
       [:ul.mdl-list
-       (u/make-all widgets (map :db/id sentences))]]
+       (u/make-all widgets (map :db/id content))]]
      [:form {:action "#"}
       [:.mdl-textfield.mdl-js-textfield.mdl-textfield--floating-label
        [:input.mdl-textfield__input {:type "text" :id (str "translation" id)}]
@@ -90,21 +90,20 @@
        [:i.material-icons "person"]]]]))
 
 (defwidget :grid
-  (template [this {:keys [:grid/components]}]
+  (template [this {:keys [:grid/content]}]
     [:.mdl-grid
-     (map (fn [component]
-            [:.mdl-cell.mdl-cell--3-col (u/make widgets (:db/id component))])
-          (sort-by first components))]))
+     (map (fn [entity]
+            [:.mdl-cell.mdl-cell--3-col (u/make widgets (:db/id entity))])
+          (sort-by first content))]))
+
+(defwidget :page
+  (template [this {:keys [:page/content]}]
+    [:.mdl-layout.mdl-js-layout.mdl-layout--fixed-header
+     (u/make-all widgets (map :db/id content))]))
 
 (defn widget [_]
   (reify
     om/IRender
     (render [this]
-      (let [db @conn
-            header        (db/get-widget :header)
-            header-drawer (db/get-widget :header-drawer)
-            grid          (db/get-widget :grid)
-            register      (db/get-widget :register-card)]
-        (sab/html [:.mdl-layout.mdl-js-layout.mdl-layout--fixed-header
-                   (u/make-all widgets [header header-drawer
-                                        grid register])])))))
+      (let [page (db/get-widget :page)]
+        (sab/html [:.app (u/make-all widgets [page])])))))
