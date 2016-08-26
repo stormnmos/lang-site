@@ -33,6 +33,7 @@
                  [weasel                  "0.7.0"  :scope "test"]
                  [org.clojure/tools.nrepl "0.2.12" :scope "test"]
                  ;; Client Side Application Requirements
+                 [kioo "0.4.2"]
                  [sablono "0.7.2"]         ;;; client side html rendering
                  [datascript "0.15.2"]     ;;; client side db holding app
                  [secretary "1.2.3"]
