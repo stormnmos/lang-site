@@ -2,7 +2,7 @@
 
 (defmacro defwidget
   "Docstring for macro"
-  [key & body]
+  [key snippet & body]
   `(defmethod widgets ~key [eid# owner#]
      (reify
        Widget
@@ -12,7 +12,8 @@
         {:listener (async/chan (async/dropping-buffer 1))})
        om/IRender
        (~(symbol "render") [this#]
-        (sab/html
+        (~snippet (d/touch (d/entity (d/db @~(symbol "conn")) eid#)))
+        #_(sab/html
          (~(symbol "template") this# (d/touch (d/entity (d/db @~(symbol "conn")) eid#)))))
        om/IWillMount
        (~(symbol "will-mount") [this#]
