@@ -17,7 +17,7 @@
        om/IWillMount
        (~(symbol "will-mount") [this#]
         (let [listener# (om/get-state owner# :listener)]
-          (d/listen! @~(symbol "conn") eid# #(~(symbol "put!") listener# %))))
+          (d/listen! @~(symbol "conn") eid# #(~(symbol "offer!") listener# %))))
        om/IShouldUpdate
        (~(symbol "should-update") [this# _# _#]
         (when-let [tx-report# (async/poll! (om/get-state owner# :listener))]

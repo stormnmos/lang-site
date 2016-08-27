@@ -18,6 +18,13 @@
    :card/title title
    :card/content sentence-eids})
 
+(defn cloze-card-template [id title question answer]
+  {:db/id id
+   :widget/type :cloze-card
+   :cloze-card/title title
+   :cloze-card/question question
+   :cloze-card/answer answer})
+
 (defn register-card-template [id]
   {:db/id id
    :widget/type :register-card})

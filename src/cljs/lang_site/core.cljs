@@ -1,7 +1,6 @@
 (ns lang-site.core
   (:require
    [mount.core :as mount]
-   [ajax.core :as ajax :refer [GET POST]]
    [lang-site.actions :as a]
    [lang-site.db :as db]
    [lang-site.components :as c]
