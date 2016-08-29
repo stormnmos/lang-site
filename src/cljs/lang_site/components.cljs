@@ -1,6 +1,8 @@
 (ns lang-site.components
   (:require [om.core :as om :include-macros true]
             [datascript.core :as d]
+            [datascript.transit :as dt]
+            [kioo.om :as k]
             [lang-site.actions :as a]
             [lang-site.db :as db]
             [lang-site.util :as u]
@@ -12,29 +14,89 @@
             [cljs.core.async :as async :refer [<! >! chan put! take! tap offer!]])
   (:require-macros
    [cljs.core.async.macros :refer [go go-loop]]
+   [kioo.om :refer [deftemplate]]
    [lang-site.components :refer [defwidget]]))
 
 (defprotocol Widget
   (children   [this])
-  (remote     [this])
-  (local-call [this])
-  (template   [this data])
-  (query      [this db]))
+  (remote     [this]))
 
 (defmulti widgets
   (fn [eid _]
     (db/g :widget/type eid)))
 
-(defwidget :default s/default)
-(defwidget :menu-item s/menu-item)
-(defwidget :link s/link)
-(defwidget :header s/header)
-(defwidget :header-drawer s/header-drawer)
-(defwidget :register-card s/register-card)
-(defwidget :login-card s/login-card)
-(defwidget :user-card s/user-card)
-(defwidget :sentence s/sentence)
-(defwidget :card s/card
+(deftemplate card "card.html"
+  [{:keys [:db/id card/title card/content]}]
+  {[:.translation-input] (k/set-attr :id  (str "translation" id))
+   [:.translation-label] (k/set-attr :for (str "translation" id))
+   [:.mdl-list]          (k/content (u/make-all widgets (map :db/id content)))
+   [:.mdl-button]        (k/listen :on-click #(a/next-card id))
+   [:.mdl-cell]          (k/listen :onKeyPress #(.log js/console %))})
+
+(deftemplate default "default.html"
+  [_]
+  {[:div] (k/content "Default Component")})
+
+(deftemplate grid "grid.html"
+  [{:keys [:grid/data :grid/content]}]
+  {#_#_[:.mdl-debug] (k/content (str content))
+   [:.mdl-grid] (k/content (u/make-all widgets (map :db/id content)))})
+
+(deftemplate header "header.html"
+  [{:keys [:header/title :header/content]}]
+  {[:.mdl-layout-title] (k/content title)})
+
+(deftemplate header-drawer "header-drawer.html"
+  [{:keys [:header-drawer/title :header-drawer/content]}]
+  {[:nav] (k/content (u/make-all widgets (map :db/id content)))})
+
+(deftemplate link "link.html"
+  [{:keys [:link/text :link/icon :link/href]}]
+  {[:a] (k/set-attr :href href)
+   [:i] (k/content icon)})
+
+(deftemplate login-card "login-card.html"
+  [{:keys [:db/id]}]
+  {[:.username-input] (k/set-attr :id  (str "register" id))
+   [:.username-label] (k/set-attr :for (str "register" id))
+   [:.password-input] (k/set-attr :id  (str "password" id))
+   [:.password-label] (k/set-attr :for (str "password" id))
+   [:.mdl-button]     (k/set-attr :on-click #(a/next-card id))})
+
+(deftemplate menu-item "menu-item.html"
+  [{:keys [:menu-item/text]}]
+  {[:li] (k/content text)})
+
+(deftemplate page "page.html"
+  [{:keys [page/content]}]
+  {[:.mdl-layout] (k/content (u/make-all widgets (map :db/id content)))})
+
+(deftemplate register-card "register-card.html"
+  [{:keys [:db/id]}]
+  {[:.username-input] (k/set-attr :id  (str "register" id))
+   [:.username-label] (k/set-attr :for (str "register" id))
+   [:.password-input] (k/set-attr :id  (str "password" id))
+   [:.password-label] (k/set-attr :for (str "password" id))
+   [:.mdl-button]     (k/set-attr :on-click #(a/next-card id))})
+
+(deftemplate sentence "sentence.html"
+  [{:keys [:sentence/text]}]
+  {[:span] (k/content text)})
+
+(deftemplate user-card "user-card.html"
+  [{:keys [:user-card/user :user-card/email]}]
+  {[:div] (k/content user)})
+
+(defwidget :default default)
+(defwidget :menu-item menu-item)
+(defwidget :link link)
+(defwidget :header header)
+(defwidget :header-drawer header-drawer)
+(defwidget :register-card register-card)
+(defwidget :login-card login-card)
+(defwidget :user-card user-card)
+(defwidget :sentence sentence)
+(defwidget :card card
   (remote
    [this]
    "/translation-group")
@@ -43,8 +105,11 @@
    [this]
    (if (> 10 (count (d/datoms (d/db @conn) :avet :widget/type :card)))
      (mapv #(req/http-get (remote this) t/card) (range 10)))))
-(defwidget :grid s/grid)
-(defwidget :page s/page)
+(defwidget :grid grid)
+(defwidget :page page
+  om/IDidUpdate
+  (did-update [_ _ _]
+     (u/persist (d/db @conn))))
 
 (defn widget [_]
   (reify
@@ -53,32 +118,3 @@
       (let [header (db/get-widget :header)
             page   (db/get-widget :page)]
         (sab/html [:.app (u/make-all widgets [page])])))))
-
-
-#_(defwidget :cloze-card
-  (template
-   [this {:keys [:db/id cloze-card/title :cloze-card/question]
-          :or {db/id 0 cloze-card/title "Title not found" close-card/question 1}
-          {answer-text :sentence/text :or {answer-text "Data not found"}}
-          :cloze-card/answer}]
-   [:.mdl-card.mdl-shadow--4dp.language-card
-    [:.mdl-card__title-text
-     [:h2.mdl-card__title-text title]]
-    [:.mdl-card__supporting-text
-     [:ul.mdl-list
-      (u/make widgets (:db/id question))
-      [:mdl-list__item.answer-item
-       [:span.mdl-list__item-primary-content answer-text]]]]
-    [:form {:action "#"}
-     [:.mdl-textfield.mdl-js-textfield.mdl-textfield--floating-label
-      [:input.mdl-textfield__input {:type "text" :id (str "translation" id)}]
-      [:label.mdl-textfield__label {:for (str "translation" id)}
-       "Translation"]]]
-    [:.mdl-card__actions.mdl-card--border
-     [:a.mdl-button.mdl-button--colored.mdl-js-button.mdl-js-ripple-effect
-      {:on-click #(a/next-card id)
-       :disabled false}
-      "Next Sentence"]]
-    [:.mdl-card__menu
-     [:button.mdl-button.mdl-button--icon.mdl-js-button.mdl-js-ripple-effect
-      [:i.material-icons "person"]]]]))

@@ -12,9 +12,7 @@
         {:listener (async/chan (async/dropping-buffer 1))})
        om/IRender
        (~(symbol "render") [this#]
-        (~snippet (d/touch (d/entity (d/db @~(symbol "conn")) eid#)))
-        #_(sab/html
-         (~(symbol "template") this# (d/touch (d/entity (d/db @~(symbol "conn")) eid#)))))
+        (~snippet (d/touch (d/entity (d/db @~(symbol "conn")) eid#))))
        om/IWillMount
        (~(symbol "will-mount") [this#]
         (let [listener# (om/get-state owner# :listener)]
