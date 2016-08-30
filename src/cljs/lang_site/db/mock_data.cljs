@@ -1,9 +1,10 @@
 (ns lang-site.db.mock-data
   (:require [lang-site.components.templates :as t]))
 
-(def many {:db/cardinality :db.cardinality/many})
-(def ref  {:db/valueType :db.type/ref})
-(def com  {:db/isComponent true})
+(def many  {:db/cardinality :db.cardinality/many})
+(def ref   {:db/valueType :db.type/ref})
+(def com   {:db/isComponent true})
+(def index {:db/index true})
 
 (def schema
   {:header/content        (merge many ref com)
@@ -36,7 +37,8 @@
    (t/login-card-template -23)
    (t/cloze-card-template -25 "Cloze" -1 -2)
    (t/header-drawer-template -8 "Language test site" [-5 -6 -7 -18 -19 -20])
-   (t/grid-template -9 "Placeholder" [-12 -14])
+   (t/grid-template -9 "Placeholder" [-12 -14 -24])
+ #_(t/grid-template -25 "Users grid" [-24])
    (t/page-template -10 [-4 -8 -9])
    (t/card-template -12 "Card 1" [-1 -2])
    (t/card-template -13 "Card 2" [-1 -2])

@@ -98,7 +98,7 @@
        (d/db conn)))
 
 (defn pull-users []
-  (d/q '[:find (pull ?e [*]) .
+  (d/q '[:find (pull ?e [*])
          :in $
          :where [?e :user/name]]
        (d/db conn)))

@@ -84,8 +84,14 @@
   {[:span] (k/content text)})
 
 (deftemplate user-card "user-card.html"
-  [{:keys [:user-card/user :user-card/email]}]
-  {[:div] (k/content user)})
+  [{{:keys [:user/name :user/email :user/password]} :user-card/user
+    id :db/id :as user-card
+    data :user-card/data}]
+  {[:.name]       (k/content name)
+   [:.email]      (k/content email)
+   [:.password]   (k/content password)
+   [:.mdl-button] (k/listen :on-click #(a/next-card id))
+   [:.users-data] (k/content data)})
 
 (defwidget :default default)
 (defwidget :menu-item menu-item)
@@ -109,12 +115,14 @@
 (defwidget :page page
   om/IDidUpdate
   (did-update [_ _ _]
-     (u/persist (d/db @conn))))
+              (u/persist (d/db @conn)))
+  om/IDidMount
+  (did-mount
+   [this]
+   (req/http-get "/api/users"  t/make-users)))
 
 (defn widget [_]
   (reify
     om/IRender
     (render [this]
-      (let [header (db/get-widget :header)
-            page   (db/get-widget :page)]
-        (sab/html [:.app (u/make-all widgets [page])])))))
+      (u/make widgets (db/get-widget :page)))))

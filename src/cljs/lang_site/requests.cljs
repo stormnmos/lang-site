@@ -12,7 +12,12 @@
 
 (defn http-get [uri template]
   (async/pipe
-   (http/get uri {:channel (async/chan 1 (comp (map :body)
-                                               (map templates/card)
-                                               (map vector)))})
-   @events false))
+   (http/get uri {:channel (async/chan 1 (comp (map :body) (map template)))})
+   @events
+   false))
+
+(defn http-post [uri param-map]
+  (async/pipe
+   (http/post uri {:transit-params param-map})
+   @events
+   false))

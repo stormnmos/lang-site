@@ -1,9 +1,9 @@
-(ns lang-site.components)
+(ns lang-site.macros)
 
 (defmacro defwidget
   "Docstring for macro"
   [key snippet & body]
-  `(defmethod widgets ~key [eid# owner#]
+  `(defmethod ~(symbol "widgets") ~key [eid# owner#]
      (reify
        Widget
        ~@body

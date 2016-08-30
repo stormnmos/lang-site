@@ -1,16 +1,18 @@
 (ns lang-site.components.templates)
 
 (defn sentence [data]
-  (merge {:widget/type :sentence} data))
+  [(merge {:widget/type :sentence}  data)])
 
 (defn card
   ([data]
    (card -1 data))
   ([id data]
-   {:db/id id
-    :widget/type :card
-    :card/title "New Card from Datomic"
-    :card/content (mapv sentence data)}))
+   [{:db/id id
+     :widget/type :card
+     :card/title "New Card from Datomic"
+     :card/content  (map :db/id data)}
+    (merge {:widget/type :sentence} (first data))
+    (merge {:widget/type :sentence} (second data))]))
 
 (defn card-template [id title sentence-eids]
   {:db/id id
@@ -53,10 +55,21 @@
    :user/name name
    :user/email email})
 
-(defn user-card-template [id user]
-  {:db/id id
-   :widget/type :user-card
-   :user-card/user user})
+(defn user-card-template
+  ([data]
+   {:db/id -1
+      :widget/type :user-card
+      :user-card/user (first data)})
+  ([id user]
+   (user-card-template id user nil))
+  ([id user data]
+   {:db/id id
+    :widget/type :user-card
+    :user-card/user user
+    :user-card/data data}))
+
+(defn make-users [datas]
+  (mapv user-card-template datas))
 
 (defn header-template [id title content-eids]
   {:db/id id

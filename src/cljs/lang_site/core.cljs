@@ -5,6 +5,7 @@
    [lang-site.db :as db]
    [lang-site.components :as c]
    [lang-site.components.templates :as templates]
+   [lang-site.db.mock-data :as m]
    [lang-site.requests :as req]
    [lang-site.state :as state :refer [conn events transactions
                                       card-queue card-eid-queue]]
@@ -45,7 +46,7 @@
   (go
     (while true
       (let [tx (<! @events)]
-        (.log js/console (pr-str tx))
+        (.log js/console (str tx))
         (try (d/transact! @conn tx)
              (catch js/Object e
                (.log js/console e))))))

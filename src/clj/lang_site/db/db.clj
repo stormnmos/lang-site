@@ -10,8 +10,8 @@
                       <! >! <!!
                       >!! put! take!]]))
 
-(defn load-schema [state schema-tx]
-  (d/transact (:connection state) schema-tx))
+(defn load-schema [schema-tx]
+  (d/transact conn schema-tx))
 
 (defmulti validate-tx
   "Ingest a transaction into Datomic DB"
