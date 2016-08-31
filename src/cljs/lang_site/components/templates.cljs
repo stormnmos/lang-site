@@ -29,7 +29,8 @@
 
 (defn register-card-template [id]
   {:db/id id
-   :widget/type :register-card})
+   :widget/type :register-card
+   :register-card/temp {:temp/user "" :temp/email "" :temp/password ""}})
 
 (defn login-card-template [id]
   {:db/id id
@@ -49,19 +50,18 @@
    :link/icon icon
    :link/href href})
 
-(defn user-template [id name email]
+(defn user-template [id name email password]
   {:db/id id
    :widget/type :user
    :user/name name
-   :user/email email})
+   :user/email email
+   :user/password password})
 
 (defn user-card-template
-  ([data]
-   {:db/id -1
-      :widget/type :user-card
-      :user-card/user (first data)})
-  ([id user]
-   (user-card-template id user nil))
+  ([id data]
+   {:db/id id
+    :widget/type :user-card
+    :user-card/user (first data)})
   ([id user data]
    {:db/id id
     :widget/type :user-card
@@ -69,7 +69,14 @@
     :user-card/data data}))
 
 (defn make-users [datas]
-  (mapv user-card-template datas))
+  [(user-card-template -1 (first datas))
+   (user-card-template -2 (second datas))
+   {:db/id 19
+    :grid/content [-1 -2]}
+   #_{:db/id (db/get-widget :grid)
+    :grid/content -1}
+   #_{:db/id (db/get-widget :grid)
+    :grid/content -2}])
 
 (defn header-template [id title content-eids]
   {:db/id id

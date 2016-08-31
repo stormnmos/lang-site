@@ -7,6 +7,9 @@
      (reify
        Widget
        ~@body
+       om/IDisplayName
+       (~(symbol "display-name") [this#]
+        eid#)
        om/IInitState
        (~(symbol "init-state") [this#]
         {:listener (async/chan (async/dropping-buffer 1))})
@@ -17,6 +20,9 @@
        (~(symbol "will-mount") [this#]
         (let [listener# (om/get-state owner# :listener)]
           (d/listen! @~(symbol "conn") eid# #(~(symbol "offer!") listener# %))))
+       om/IWillUnmount
+       (~(symbol "will-unmount") [this#]
+        (d/unlisten! @~(symbol "conn") eid#))
        om/IShouldUpdate
        (~(symbol "should-update") [this# _# _#]
         (when-let [tx-report# (async/poll! (om/get-state owner# :listener))]

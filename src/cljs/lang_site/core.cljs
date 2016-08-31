@@ -7,14 +7,13 @@
    [lang-site.components.templates :as templates]
    [lang-site.db.mock-data :as m]
    [lang-site.requests :as req]
-   [lang-site.state :as state :refer [conn events transactions
-                                      card-queue card-eid-queue]]
+   [lang-site.state :as state :refer [conn events]]
+   [lang-site.util :as u]
    [cognitect.transit :as t]
    [datascript.core :as d]
    [goog.dom :as gdom]
    [goog.events :as events]
    [om.core :as om :include-macros true]
-   [sablono.core :as sab :refer-macros [html]]
    [cljs.core.async :as async :refer [<! >! chan put! take!
                                       poll! offer! mult tap]]
    [secretary.core :as secretary :refer-macros [defroute]]
@@ -29,7 +28,7 @@
   (req/http-get "/api/schema" identity))
 
 (defroute users "#/api/users" []
-  (req/http-get "/api/users" identity))
+  (req/http-get "/api/users" templates/make-users))
 
 (defroute register "/#api/register" []
   (req/http-get "/api/users" identity))
@@ -54,15 +53,16 @@
     (events/listen history "navigate"
                    (fn [event]
                      (secretary/dispatch! (.-token event))))
-    (.setEnabled history true))
-  (om/root c/widget @conn
-           {:shared {:events @events}
-            :target (. js/document (getElementById "app"))}))
+    (.setEnabled history true)))
 
-(defonce app run)
+(om/root c/widget @conn
+         {:react-key "root"
+          :target (.getElementById js/document "lang-site")})
+
+#_(defn on-js-reload []
+  (.log js/console "Reloaded"))
 
 (defn on-js-reload []
   (om/root c/widget @conn
            {:react-key "root"
-            :shared {:events @events}
-            :target (. js/document (getElementById "app"))}))
+            :target (.getElementById js/document "lang-site")}))

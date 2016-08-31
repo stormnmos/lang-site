@@ -1,5 +1,6 @@
 (ns lang-site.components
   (:require [om.core :as om :include-macros true]
+            [om.dom :as dom]
             [datascript.core :as d]
             [datascript.transit :as dt]
             [kioo.om :as k]
@@ -7,10 +8,9 @@
             [lang-site.db :as db]
             [lang-site.util :as u]
             [lang-site.requests :as req]
-            [lang-site.state :refer [conn events transactions]]
+            [lang-site.state :refer [conn events]]
             [lang-site.components.snippets :as s]
             [lang-site.components.templates :as t]
-            [sablono.core :as sab :include-macros true]
             [cljs.core.async :as async :refer [<! >! chan put! take! tap offer!]])
   (:require-macros
    [cljs.core.async.macros :refer [go go-loop]]
@@ -72,12 +72,18 @@
   {[:.mdl-layout] (k/content (u/make-all widgets (map :db/id content)))})
 
 (deftemplate register-card "register-card.html"
-  [{:keys [:db/id]}]
-  {[:.username-input] (k/set-attr :id  (str "register" id))
-   [:.username-label] (k/set-attr :for (str "register" id))
-   [:.password-input] (k/set-attr :id  (str "password" id))
-   [:.password-label] (k/set-attr :for (str "password" id))
-   [:.mdl-button]     (k/set-attr :on-click #(a/next-card id))})
+  [{:keys [:db/id :register-card/temp]}]
+  {[:.username-input]
+   (k/set-attr :onChange (partial a/track-input (:db/id temp) :temp/user)
+               :value    (:temp/user temp))
+   [:.email-input]
+   (k/set-attr :onChange (partial a/track-input (:db/id temp) :temp/email)
+               :value    (:temp/email temp))
+   [:.password-input]
+   (k/set-attr :onChange (partial a/track-input (:db/id temp) :temp/password)
+               :value    (:temp/password temp))
+   [:.mdl-button]
+   (k/set-attr :on-click #(a/next-card id))})
 
 (deftemplate sentence "sentence.html"
   [{:keys [:sentence/text]}]
@@ -90,7 +96,7 @@
   {[:.name]       (k/content name)
    [:.email]      (k/content email)
    [:.password]   (k/content password)
-   [:.mdl-button] (k/listen :on-click #(a/next-card id))
+   [:.mdl-button] (k/listen :on-click #(a/remove-eid id))
    [:.users-data] (k/content data)})
 
 (defwidget :default default)
@@ -115,11 +121,12 @@
 (defwidget :page page
   om/IDidUpdate
   (did-update [_ _ _]
-              (u/persist (d/db @conn)))
+    (u/persist (d/db @conn)))
   om/IDidMount
   (did-mount
    [this]
-   (req/http-get "/api/users"  t/make-users)))
+   nil
+   #_(req/http-get "/api/users" t/make-users)))
 
 (defn widget [_]
   (reify

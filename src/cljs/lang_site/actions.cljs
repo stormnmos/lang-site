@@ -10,22 +10,22 @@
    [lang-site.requests :as req])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
-(defn transact! [events data]
+(defn transact! [data]
   (go
-    (>! events data)))
+    (>! @events data)))
 
 (defmulti transactions!
   (fn [transaction]
     (:type transaction)))
 
 (defn card-request-handler [[status body]]
-  (transact! state/events [(templates/card body)]))
+  (transact! [(templates/card body)]))
 
 (defn schema-request-handler [response]
-  (d/transact! state/events [response]))
+  (transact! [response]))
 
 (defn users-request-handler [[status body]]
-  (d/transact! state/events body))
+  (transact! body))
 
 (defn add-text [eid events owner order tag]
   (go (>! events [{:db/id -1 :widget/type :text
@@ -48,14 +48,21 @@
 (defn validate-card [eid db]
   "confirm that eid should be deleted")
 
+(defn remove-eid [eid]
+  (transact! [[:db.fn/retractEntity eid]]))
+
 (defn next-card [eid]
   (let [next (->> (d/datoms (d/db @conn) :avet :widget/type :card)
                   (map :e)
                   (filter #(< eid %))
                   (first))]
-    (transact! @events [[:db.fn/cas (db/get-widget :grid) :grid/content
+    (transact! [[:db.fn/cas (db/get-widget :grid) :grid/content
                          eid next]
                         [:db.fn/retractEntity eid]])))
 
 (defn get-card-eids []
   (d/datoms :avet :card/title))
+
+(defn track-input [id key e]
+  (transact! [{:db/id id
+              key (-> e .-target .-value)}]))

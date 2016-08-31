@@ -41,6 +41,10 @@
        {:status 200
         :headers {"Content-Type" "application/transit"}
         :body request})
+  (POST "/api/echo" request
+        {:status 200
+         :headers {"Content-Type" "application/transit"}
+         :body request})
   (GET "/api/schema" []
        {:status 200
         :body (q/pull-schema)})

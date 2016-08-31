@@ -22,15 +22,3 @@
 
 (defstate events
   :start (chan 10))
-
-(defstate transactions
-  :start (let [tx-chan (chan)
-               tx-mult (mult tx-chan)]
-           (d/listen! @conn #(put! tx-chan %))
-           tx-mult))
-
-(defstate card-queue
-  :start (chan 100))
-
-(defstate card-eid-queue
-  :start (chan 110))

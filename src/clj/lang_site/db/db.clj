@@ -3,6 +3,7 @@
    [lang-site.db.db-data :as dbd]
    [lang-site.db.queries :as q]
    [lang-site.db.transaction-templates :as tt]
+   [lang-site.state :refer [conn]]
    [datomic.api :as d]
    [environ.core :refer [env]]
    [clojure.core.async

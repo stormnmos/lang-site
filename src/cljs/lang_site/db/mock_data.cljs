@@ -15,6 +15,7 @@
    :grid/content          (merge many ref com)
    :page/content          (merge many ref com)
    :user-card/user        (merge      ref com)
+   :register-card/temp    (merge      ref com)
    :widget/type           {:db/index true}})
 
 (def fixtures
@@ -32,8 +33,8 @@
    (t/link-template -19 "Forum" "forum" "#forum")
    (t/link-template -20 "Flag" "flag" "#flag")
    (t/link-template -21 "Promos" "local_offer" "#local_offer")
-   (t/user-template -22 "Bob" "bob@email.com")
-   (t/user-card-template -24 -22)
+   (t/user-template -22 "Bob" "bob@email.com" "password")
+   (t/user-card-template -24 -22 -22)
    (t/login-card-template -23)
    (t/cloze-card-template -25 "Cloze" -1 -2)
    (t/header-drawer-template -8 "Language test site" [-5 -6 -7 -18 -19 -20])

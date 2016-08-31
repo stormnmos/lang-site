@@ -12,7 +12,8 @@
 
 (defn http-get [uri template]
   (async/pipe
-   (http/get uri {:channel (async/chan 1 (comp (map :body) (map template)))})
+   (http/get uri {:channel (async/chan 1 (comp (map :body)
+                                               (map template)))})
    @events
    false))
 
