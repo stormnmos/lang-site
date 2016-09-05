@@ -18,7 +18,10 @@
    false))
 
 (defn http-post [uri param-map]
+  (.log js/console (str param-map))
   (async/pipe
-   (http/post uri {:transit-params param-map})
+   (http/post uri {:transit-params param-map
+                   :channel (async/chan 1 (comp (map :body)
+                                                #_(map :transit-params)))})
    @events
    false))

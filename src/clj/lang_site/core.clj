@@ -14,15 +14,15 @@
    [ring.middleware.params :refer [wrap-params]]
    [ring.middleware.session :refer [wrap-session]]
    [ring.middleware.transit :as transit :only [wrap-transit-body
+                                               wrap-transit-params
                                                wrap-transit]]))
 
 (mount/start)
 
 (def handler
   (-> h/routes
+      (transit/wrap-transit-params)
       (transit/wrap-transit-response {:encoding :json})
-      (wrap-keyword-params)
-      (wrap-params)
       (wrap-session)))
 
 ;;; Main handler for transacting into datomic

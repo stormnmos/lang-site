@@ -72,18 +72,14 @@
   {[:.mdl-layout] (k/content (u/make-all widgets (map :db/id content)))})
 
 (deftemplate register-card "register-card.html"
-  [{:keys [:db/id :register-card/temp]}]
-  {[:.username-input]
-   (k/set-attr :onChange (partial a/track-input (:db/id temp) :temp/user)
-               :value    (:temp/user temp))
-   [:.email-input]
-   (k/set-attr :onChange (partial a/track-input (:db/id temp) :temp/email)
-               :value    (:temp/email temp))
-   [:.password-input]
-   (k/set-attr :onChange (partial a/track-input (:db/id temp) :temp/password)
-               :value    (:temp/password temp))
+  [{{:keys [:db/id :temp/user :temp/email :temp/password]} :register-card/temp}]
+  {[:.username-input] (k/listen :onKeyUp (partial a/track-input id :temp/user))
+   [:.email-input]    (k/listen :onKeyUp (partial a/track-input id :temp/email))
+   [:.password-input] (k/listen :onKeyUp (partial a/track-input id :temp/password))
    [:.mdl-button]
-   (k/set-attr :on-click #(a/next-card id))})
+   (k/set-attr
+    :onClick #(req/http-post "/api/users"
+                {:user user :email email :password password}))})
 
 (deftemplate sentence "sentence.html"
   [{:keys [:sentence/text]}]

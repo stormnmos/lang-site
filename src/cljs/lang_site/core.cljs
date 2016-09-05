@@ -45,7 +45,6 @@
   (go
     (while true
       (let [tx (<! @events)]
-        (.log js/console (str tx))
         (try (d/transact! @conn tx)
              (catch js/Object e
                (.log js/console e))))))
@@ -58,9 +57,6 @@
 (om/root c/widget @conn
          {:react-key "root"
           :target (.getElementById js/document "lang-site")})
-
-#_(defn on-js-reload []
-  (.log js/console "Reloaded"))
 
 (defn on-js-reload []
   (om/root c/widget @conn

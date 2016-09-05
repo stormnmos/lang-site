@@ -45,6 +45,10 @@
         {:status 200
          :headers {"Content-Type" "application/transit"}
          :body request})
+  (POST "/api/users" [user email password]
+        {:status 200
+         :headers {"Content-Type" "applications/transit"}
+         :body nil})
   (GET "/api/schema" []
        {:status 200
         :body (q/pull-schema)})
