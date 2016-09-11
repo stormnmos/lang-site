@@ -52,11 +52,11 @@
   (transact! [[:db.fn/retractEntity eid]]))
 
 (defn next-card [eid]
-  (let [next (->> (d/datoms (d/db @conn) :avet :widget/type :card)
+  (let [next (->> (d/datoms (d/db @conn) :avet :widget/type :widget/card)
                   (map :e)
                   (filter #(< eid %))
                   (first))]
-    (transact! [[:db.fn/cas (db/get-widget :grid) :grid/content
+    (transact! [[:db.fn/cas (db/get-widget :widget/grid) :grid/content
                          eid next]
                         [:db.fn/retractEntity eid]])))
 

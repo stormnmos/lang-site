@@ -1,70 +1,52 @@
-(ns lang-site.components.templates)
+(ns lang-site.components.templates
+  (:require [cljs.spec :as s]))
+
+(defn widget [id type]
+  {:db/id id
+   :widget/type type})
+
+(defn make [type & keys]
+  (fn [id & data]
+    (merge (widget id type)
+           (zipmap keys data))))
+
+(def cloze-card-t (make :widget/cloze-card :cloze-card/title :cloze-card/question :cloze-card/answer))
+(def sentence-t (make :widget/sentence :sentence/text :sentence/group :sentence/language))
+(def link-t (make :widget/link :link/text :link/icon :link/href))
+(def user-t (make :widget/user :user/name :user/email :user/password))
+(def header-t (make :widget/header :header/title :header/content))
+(def header-drawer-t (make :widget/header-drawer :header-drawer/title :header-drawer/content))
+(def menu-item-t (make :widget/menu-item :menu-item/text))
+(def grid-t (make :widget/grid :grid/data :grid/content))
+(def page-t (make :widget/page :page/content))
+(def card-t (make :widget/card :card/title :card/question :card/answer))
+(def register-card-t (make :widget/register-card :register-card/user :register-card/email :register-card/password))
+(def login-card-t (make :widget/login-card))
+(def user-card-t (make :widget/user-card :user-card/user :user-card/data))
 
 (defn sentence [data]
-  [(merge {:widget/type :sentence}  data)])
+  [(merge {:widget/type :widget/sentence}  data)])
 
 (defn card
   ([data]
    (card -1 data))
   ([id data]
-   [{:db/id id
-     :widget/type :card
-     :card/title "New Card from Datomic"
-     :card/content  (map :db/id data)}
-    (merge {:widget/type :sentence} (first data))
-    (merge {:widget/type :sentence} (second data))]))
-
-(defn card-template [id title sentence-eids]
-  {:db/id id
-   :widget/type :card
-   :card/title title
-   :card/content sentence-eids})
-
-(defn cloze-card-template [id title question answer]
-  {:db/id id
-   :widget/type :cloze-card
-   :cloze-card/title title
-   :cloze-card/question question
-   :cloze-card/answer answer})
-
-(defn register-card-template [id]
-  {:db/id id
-   :widget/type :register-card
-   :register-card/temp {:temp/user "" :temp/email "" :temp/password ""}})
-
-(defn login-card-template [id]
-  {:db/id id
-   :widget/type :login-card})
-
-(defn sentence-template [id text group lang]
-  {:db/id id
-   :widget/type :sentence
-   :sentence/text text
-   :sentence/group group
-   :sentence/language lang})
-
-(defn link-template [id text icon href]
-  {:db/id id
-   :widget/type :link
-   :link/text text
-   :link/icon icon
-   :link/href href})
-
-(defn user-template [id name email password]
-  {:db/id id
-   :widget/type :user
-   :user/name name
-   :user/email email
-   :user/password password})
+   [(merge (widget id :widget/card)
+           {:card/title "New Card from Datomic"
+            :card/content  (map :db/id data)
+            :card/question (:db/id (first data))
+            :card/answer   (:db/id (second data))})
+    (merge {:widget/type :widget/sentence} (first data))
+    (merge {:widget/type :widget/sentence} (second data))]))
 
 (defn user-card-template
-  ([id data]
+  ([id user]
    {:db/id id
-    :widget/type :user-card
-    :user-card/user (first data)})
+    :widget/type :widget/user-card
+    :user-card/user (first user)})
   ([id user data]
    {:db/id id
-    :widget/type :user-card
+    :widget/type :widget/user-card
     :user-card/user user
     :user-card/data data}))
 
@@ -72,36 +54,4 @@
   [(user-card-template -1 (first datas))
    (user-card-template -2 (second datas))
    {:db/id 19
-    :grid/content [-1 -2]}
-   #_{:db/id (db/get-widget :grid)
-    :grid/content -1}
-   #_{:db/id (db/get-widget :grid)
-    :grid/content -2}])
-
-(defn header-template [id title content-eids]
-  {:db/id id
-   :widget/type :header
-   :header/title title
-   :header/content content-eids})
-
-(defn header-drawer-template [id title content]
-  {:db/id id
-   :widget/type :header-drawer
-   :header-drawer/title title
-   :header-drawer/content content})
-
-(defn menu-item-template [id text]
-  {:db/id id
-   :widget/type :menu-item
-   :menu-item/text text})
-
-(defn grid-template [id data components]
-  {:db/id id
-   :widget/type :grid
-   :grid/data data
-   :grid/content components})
-
-(defn page-template [id content]
-  {:db/id id
-   :widget/type :page
-   :page/content content})
+    :grid/content [-1 -2]}])

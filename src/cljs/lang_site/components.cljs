@@ -11,7 +11,8 @@
             [lang-site.state :refer [conn events]]
             [lang-site.components.snippets :as s]
             [lang-site.components.templates :as t]
-            [cljs.core.async :as async :refer [<! >! chan put! take! tap offer!]])
+            [cljs.core.async :as async :refer [<! >! chan put! take! tap offer!]]
+            [clojure.string :as sring])
   (:require-macros
    [cljs.core.async.macros :refer [go go-loop]]
    [kioo.om :refer [deftemplate]]
@@ -26,12 +27,21 @@
     (db/g :widget/type eid)))
 
 (deftemplate card "card.html"
-  [{:keys [:db/id card/title card/content]}]
+  [{:keys [:db/id :card/title]
+    {answer-sentence :sentence/text
+     :or {answer-sentence "answer not found"}} :card/answer
+    {question-sentence :sentence/text
+     :or {question-sentence "question not found"}} :card/question}]
   {[:.translation-input] (k/set-attr :id  (str "translation" id))
    [:.translation-label] (k/set-attr :for (str "translation" id))
-   [:.mdl-list]          (k/content (u/make-all widgets (map :db/id content)))
+   [:.card-question]     (k/content question-sentence)
+   [:.card-answer]       (k/content answer-sentence)
    [:.mdl-button]        (k/listen :on-click #(a/next-card id))
-   [:.mdl-cell]          (k/listen :onKeyPress #(.log js/console %))})
+   [:.mdl-cell]          (k/listen :onKeyPress #(.log js/console %))
+   [:.b1]                (k/content "Test1")
+   [:.b2]                (k/content "Test2")
+   [:.b3]                (k/content "Test3")
+   [:.b4]                (k/content "Test4")})
 
 (deftemplate default "default.html"
   [_]
@@ -96,28 +106,28 @@
    [:.users-data] (k/content data)})
 
 (defwidget :default default)
-(defwidget :menu-item menu-item)
-(defwidget :link link)
-(defwidget :header header)
-(defwidget :header-drawer header-drawer)
-(defwidget :register-card register-card)
-(defwidget :login-card login-card)
-(defwidget :user-card user-card)
-(defwidget :sentence sentence)
-(defwidget :card card
+(defwidget :widget/menu-item menu-item)
+(defwidget :widget/link link)
+(defwidget :widget/header header)
+(defwidget :widget/header-drawer header-drawer)
+(defwidget :widget/register-card register-card)
+(defwidget :widget/login-card login-card)
+(defwidget :widget/user-card user-card)
+(defwidget :widget/sentence sentence)
+(defwidget :widget/card card
   (remote
    [this]
    "/translation-group")
   om/IDidMount
   (did-mount
    [this]
-   (if (> 10 (count (d/datoms (d/db @conn) :avet :widget/type :card)))
+   (if (> 10 (count (d/datoms (d/db @conn) :avet :widget/type :widget/card)))
      (mapv #(req/http-get (remote this) t/card) (range 10)))))
-(defwidget :grid grid)
-(defwidget :page page
-  om/IDidUpdate
-  (did-update [_ _ _]
-    (u/persist (d/db @conn)))
+(defwidget :widget/grid grid)
+(defwidget :widget/page page
+  #_ om/IDidUpdate
+  #_ (did-update [_ _ _]
+       (u/persist (d/db @conn)))
   om/IDidMount
   (did-mount
    [this]
@@ -128,4 +138,4 @@
   (reify
     om/IRender
     (render [this]
-      (u/make widgets (db/get-widget :page)))))
+      (u/make widgets (db/get-widget :widget/page)))))

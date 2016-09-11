@@ -45,6 +45,10 @@
         {:status 200
          :headers {"Content-Type" "application/transit"}
          :body request})
+  (POST "/api/transact" request
+        {:status 200
+         :header {"Content-Type" "application/transit"}
+         :body request})
   (POST "/api/users" [user email password]
         {:status 200
          :headers {"Content-Type" "applications/transit"}

@@ -45,6 +45,7 @@
   (go
     (while true
       (let [tx (<! @events)]
+        (.log js/console (str tx))
         (try (d/transact! @conn tx)
              (catch js/Object e
                (.log js/console e))))))
