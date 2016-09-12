@@ -9,6 +9,7 @@
             [lang-site.util :as u]
             [lang-site.requests :as req]
             [lang-site.state :refer [conn events]]
+            [lang-site.spec :as spec]
             [lang-site.components.templates :as t]
             [cljs.core.async :as async :refer [<! >! chan put! take! tap offer!]]
             [cljs.spec :as s :include-macros true]
@@ -18,7 +19,7 @@
    [kioo.om :refer [deftemplate]]
    [lang-site.components :refer [defwidget]]))
 
-(defn eid->map [eid]
+(defn eid->entity [eid]
   {:pre  [(s/valid? :widget/ref eid)]
    :post [(s/valid? map? %)]}
   (->> eid
@@ -26,8 +27,7 @@
        (d/touch)))
 
 (defn make [f eid]
-  {:pre [(s/valid? #(< 0 %) eid)]}
-  (.log js/console (cljs.pprint/pprint (s/explain-data :widget/widget (eid->map eid))))
+  (s/assert :widget/widget (eid->entity eid))
   (om/build f eid {:react-key eid}))
 
 (defn make-all [f eids]
@@ -35,7 +35,6 @@
   (map (partial make f) eids))
 
 (defprotocol Widget
-  (children   [this])
   (remote     [this]))
 
 (defmulti widgets
@@ -47,7 +46,7 @@
     {answer-sentence :sentence/text
      :or {answer-sentence "answer not found"}} :card/answer
     {question-sentence :sentence/text
-     :or {question-sentence "question not found"}} :card/question}]
+     :or {question-sentence "question not found"}} :card/question} owner]
   {[:.translation-input] (k/set-attr :id  (str "translation" id))
    [:.translation-label] (k/set-attr :for (str "translation" id))
    [:.card-question]     (k/content question-sentence)
@@ -60,29 +59,34 @@
    [:.b4]                (k/content "Test4")})
 
 (deftemplate default "default.html"
-  [_]
+  [_ _]
   {[:div] (k/content "Default Component")})
 
+(deftemplate footer "footer.html"
+  [{:keys [:footer/left-links :footer/right-links]} owner]
+  {[:.left-list] (k/content (make-all widgets (map :db/id left-links)))
+   [:.right-list] (k/content (make-all widgets (map :db/id right-links)))})
+
 (deftemplate grid "grid.html"
-  [{:keys [:grid/data :grid/content]}]
+  [{:keys [:grid/data :grid/content]} owner]
   {#_#_[:.mdl-debug] (k/content (str content))
    [:.mdl-grid] (k/content (make-all widgets (map :db/id content)))})
 
 (deftemplate header "header.html"
-  [{:keys [:header/title :header/content]}]
+  [{:keys [:header/title :header/content]} owner]
   {[:.mdl-layout-title] (k/content title)})
 
 (deftemplate header-drawer "header-drawer.html"
-  [{:keys [:header-drawer/title :header-drawer/content]}]
+  [{:keys [:header-drawer/title :header-drawer/content]} owner]
   {[:nav] (k/content (make-all widgets (map :db/id content)))})
 
 (deftemplate link "link.html"
-  [{:keys [:link/text :link/icon :link/href]}]
+  [{:keys [:link/text :link/icon :link/href]} owner]
   {[:a] (k/set-attr :href href)
    [:i] (k/content icon)})
 
 (deftemplate login-card "login-card.html"
-  [{:keys [:db/id]}]
+  [{:keys [:db/id]} owner]
   {[:.username-input] (k/set-attr :id  (str "register" id))
    [:.username-label] (k/set-attr :for (str "register" id))
    [:.password-input] (k/set-attr :id  (str "password" id))
@@ -90,31 +94,40 @@
    [:.mdl-button]     (k/set-attr :on-click #(a/next-card id))})
 
 (deftemplate menu-item "menu-item.html"
-  [{:keys [:menu-item/text]}]
+  [{:keys [:menu-item/text]} owner]
   {[:li] (k/content text)})
 
 (deftemplate page "page.html"
-  [{:keys [page/content]}]
+  [{:keys [page/content]} owner]
   {[:.mdl-layout] (k/content (make-all widgets (map :db/id content)))})
 
 (deftemplate register-card "register-card.html"
-  [{{:keys [:db/id :temp/user :temp/email :temp/password]} :register-card/temp}]
-  {[:.username-input] (k/listen :onKeyUp (partial a/track-input id :temp/user))
-   [:.email-input]    (k/listen :onKeyUp (partial a/track-input id :temp/email))
-   [:.password-input] (k/listen :onKeyUp (partial a/track-input id :temp/password))
+  [{:keys [:db/id
+           :register-card/user
+           :register-card/email
+           :register-card/password]} owner]
+  {[:.username-input]
+   (k/set-attr :ref "user")
+   [:.email-input]
+   (k/set-attr :ref "email")
+   [:.password-input]
+   (k/set-attr :ref "password")
    [:.mdl-button]
    (k/set-attr
-    :onClick #(req/http-post "/api/users"
-                {:user user :email email :password password}))})
+    :onClick #(req/http-post
+               "/api/users"
+               {:user (.-value (om/get-node owner "user"))
+                :email (.-value (om/get-node owner "email"))
+                :password (.-value (om/get-node owner "password"))}))})
 
 (deftemplate sentence "sentence.html"
-  [{:keys [:sentence/text]}]
+  [{:keys [:sentence/text]} owner]
   {[:span] (k/content text)})
 
 (deftemplate user-card "user-card.html"
   [{{:keys [:user/name :user/email :user/password]} :user-card/user
     id :db/id :as user-card
-    data :user-card/data}]
+    data :user-card/data} owner]
   {[:.name]       (k/content name)
    [:.email]      (k/content email)
    [:.password]   (k/content password)
@@ -122,6 +135,7 @@
    [:.users-data] (k/content data)})
 
 (defwidget :default default)
+(defwidget :widget/footer footer)
 (defwidget :widget/menu-item menu-item)
 (defwidget :widget/link link)
 (defwidget :widget/header header)
