@@ -58,6 +58,10 @@
    [:.b3]                (k/content "Test3")
    [:.b4]                (k/content "Test4")})
 
+(deftemplate container "container.html"
+  [{:keys [:container/content]} owner]
+  {[:.row] (k/content (make-all widgets (map :db/id content)))})
+
 (deftemplate default "default.html"
   [_ _]
   {[:div] (k/content "Default Component")})
@@ -97,9 +101,20 @@
   [{:keys [:menu-item/text]} owner]
   {[:li] (k/content text)})
 
+(deftemplate nav "nav.html"
+  [{:keys [:db/id :nav/title :nav/links]} owner]
+  {[:.title] (k/content title)
+   [:.nav-links] (k/content (make-all widgets (map :db/id links)))})
+
+(deftemplate nav-link "nav-link.html"
+  [{:keys [:db/id :nav-link/text :nav-link/href]} owner]
+  {[:a] (k/do->
+         (k/content text)
+         (k/set-attr :href href))})
+
 (deftemplate page "page.html"
   [{:keys [page/content]} owner]
-  {[:.mdl-layout] (k/content (make-all widgets (map :db/id content)))})
+  {[:.app] (k/content (make-all widgets (map :db/id content)))})
 
 (deftemplate register-card "register-card.html"
   [{:keys [:db/id
@@ -124,6 +139,17 @@
   [{:keys [:sentence/text]} owner]
   {[:span] (k/content text)})
 
+(deftemplate sidebar "sidebar.html"
+  [{:keys [:sidebar/links1 :sidebar/links2 :sidebar/links3]} owner]
+  {[:.sidebar1] (k/content (make-all widgets (map :db/id links1)))
+   [:.sidebar2] (k/content (make-all widgets (map :db/id links2)))
+   [:.sidebar3] (k/content (make-all widgets (map :db/id links3)))})
+
+(deftemplate sidebar-link "sidebar-link.html"
+  [{:keys [:sidebar-link/text :sidebar-link/href]} owner]
+  {[:a] (k/do-> (k/set-attr :href href)
+                (k/content text))})
+
 (deftemplate user-card "user-card.html"
   [{{:keys [:user/name :user/email :user/password]} :user-card/user
     id :db/id :as user-card
@@ -135,15 +161,20 @@
    [:.users-data] (k/content data)})
 
 (defwidget :default default)
+(defwidget :widget/container container)
 (defwidget :widget/footer footer)
 (defwidget :widget/menu-item menu-item)
 (defwidget :widget/link link)
 (defwidget :widget/header header)
 (defwidget :widget/header-drawer header-drawer)
 (defwidget :widget/register-card register-card)
+(defwidget :widget/nav nav)
+(defwidget :widget/nav-link nav-link)
 (defwidget :widget/login-card login-card)
 (defwidget :widget/user-card user-card)
 (defwidget :widget/sentence sentence)
+(defwidget :widget/sidebar sidebar)
+(defwidget :widget/sidebar-link sidebar-link)
 (defwidget :widget/card card
   (remote
    [this]

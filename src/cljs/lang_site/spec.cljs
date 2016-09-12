@@ -26,6 +26,10 @@
 (defmethod widget :widget/card [_]
   (s/keys :req [:widget/type :card/title :card/question :card/answer]))
 
+(s/def :container/content :widget/refs)
+(defmethod widget :widget/container [_]
+  (s/keys :req [:widget/type :container/content]))
+
 (s/def :footer/left-links :widget/refs)
 (s/def :footer/right-links :widget/refs)
 (defmethod widget :widget/footer [_]
@@ -51,6 +55,16 @@
 (s/def :link/href string?)
 (defmethod widget :widget/link [_]
   (s/keys :req [:widget/type :link/text :link/icon :link/href]))
+
+(s/def :nav/title string?)
+(s/def :nav/links :widget/refs)
+(defmethod widget :widget/nav [_]
+  (s/keys :req [:widget/type :nav/title :nav/links]))
+
+(s/def :nav-link/text string?)
+(s/def :nav-link/href string?)
+(defmethod widget :widget/nav-link [_]
+  (s/keys :req [:widget/type :nav-link/text :nav-link/href]))
 
 (defmethod widget :widget/login-card [_]
   :widget/shared)
@@ -79,6 +93,17 @@
         :transit #(#{:sentence.language/eng :sentence.language/tur} (:db/ident %))))
 (defmethod widget :widget/sentence [_]
   (s/keys :req [:widget/type :sentence/text #_ :sentence/group #_ :sentence/language]))
+
+(s/def :sidebar/links1 :widget/refs)
+(s/def :sidebar/links2 :widget/refs)
+(s/def :sidebar/links3 :widget/refs)
+(defmethod widget :widget/sidebar [_]
+  (s/keys :req [:widget/type :sidebar/links1 :sidebar/links2 :sidebar/links3]))
+
+(s/def :sidebar-link/text string?)
+(s/def :sidebar-link/href string?)
+(defmethod widget :widget/sidebar-link [_]
+  (s/keys :req [:widget/type :sidebar-link/text :sidebar-link/href]))
 
 (s/def :user/name :widget/user)
 (s/def :user/email :widget/email)

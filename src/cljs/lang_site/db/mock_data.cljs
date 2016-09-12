@@ -3,6 +3,7 @@
    [lang-site.components.templates :as t]))
 
 (def card [:widget/card :card/title :card/question :card/answer])
+(def container [:widget/container :container/content])
 (def footer [:widget/footer :footer/left-links :footer/right-links])
 (def grid [:widget/grid :grid/data :grid/content])
 (def header [:widget/header :header/title :header/content])
@@ -10,10 +11,14 @@
 (def link [:widget/link :link/text :link/icon :link/href])
 (def login-card [:widget/login-card])
 (def menu-item [:widget/menu-item :menu-item/text])
+(def nav [:widget/nav :nav/title :nav/links])
+(def nav-link [:widget/nav-link :nav-link/text :nav-link/href])
 (def page [:widget/page :page/content])
 (def register-card [:widget/register-card :register-card/user
                     :register-card/email :register-card/password])
 (def sentence [:widget/sentence :sentence/text :sentence/group :sentence/language])
+(def sidebar [:widget/sidebar :sidebar/links1 :sidebar/links2 :sidebar/links3])
+(def sidebar-link [:widget/sidebar-link :sidebar-link/text :sidebar-link/href])
 (def user [:widget/user :user/name :user/email :user/password])
 (def user-card [:widget/user-card :user-card/user :user-card/data])
 
@@ -28,14 +33,19 @@
    :card/question         (merge      ref com)
    :card/answer           (merge      ref com)
    :card/content          (merge many ref com)
+   :container/content     (merge many ref com)
    :cloze-card/question   (merge      ref com)
    :close-card/answer     (merge      ref com)
    :footer/left-links     (merge many ref com)
    :footer/right-links    (merge many ref com)
    :grid/content          (merge many ref com)
+   :nav/links             (merge many ref com)
    :page/content          (merge many ref com)
    :user-card/user        (merge      ref com)
    :register-card/temp    (merge      ref com)
+   :sidebar/links1        (merge many ref com)
+   :sidebar/links2        (merge many ref com)
+   :sidebar/links3        (merge many ref com)
    :widget/type           {:db/index true}})
 
 (defn make [[type & keys] id & data]
@@ -65,8 +75,17 @@
          [user-card -24 -22 -22]
          [header-drawer -8 "Language test site" [-5 -6 -7 -18 -19 -20]]
          [grid -9 "Placeholder" [-12 -13 -14 -24]]
-         [page -10 [-4 -8 -9 -31]]
+         [page -10 [-32 -40 #_ -8 #_-9 #_ -31]]
          [register-card -14 "User" "Example@example.com" "ExamplePassword"]
          [card -12 "Card 1" -1 -2]
          [card -13 "Card 2" -3 -30]
-         [footer -31 [-18 -20] [-23 -21]]]))
+         [footer -31 [-18 -20] [-23 -21]]
+         [nav -32 "Language test site" [-33 -34 -35]]
+         [nav-link -33 "Link1" "#link1"]
+         [nav-link -34 "Link2" "#link2"]
+         [nav-link -35 "Link3" "#link3"]
+         [sidebar -36 [-37] [-38] [-39]]
+         [sidebar-link -37 "Test" "#test"]
+         [sidebar-link -38 "1" "#1"]
+         [sidebar-link -39 "2" "#2"]
+         [container -40 [-36]]]))
