@@ -23,7 +23,7 @@
                  [boot-environ "1.0.3"]
                  ;;  Clojure and Clojurescript Dependencies
                  [org.clojure/clojure "1.9.0-alpha8"]
-                 [org.clojure/clojurescript "1.9.93"]
+                 [org.clojure/clojurescript "1.9.229"]
                  [org.omcljs/om "1.0.0-alpha34"]
                  ;; Devcards addon
                  [devcards "0.2.1-7"]

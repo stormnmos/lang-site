@@ -9,14 +9,30 @@
             [lang-site.util :as u]
             [lang-site.requests :as req]
             [lang-site.state :refer [conn events]]
-            [lang-site.components.snippets :as s]
             [lang-site.components.templates :as t]
             [cljs.core.async :as async :refer [<! >! chan put! take! tap offer!]]
+            [cljs.spec :as s :include-macros true]
             [clojure.string :as sring])
   (:require-macros
    [cljs.core.async.macros :refer [go go-loop]]
    [kioo.om :refer [deftemplate]]
    [lang-site.components :refer [defwidget]]))
+
+(defn eid->map [eid]
+  {:pre  [(s/valid? :widget/ref eid)]
+   :post [(s/valid? map? %)]}
+  (->> eid
+       (d/entity (d/db @conn))
+       (d/touch)))
+
+(defn make [f eid]
+  {:pre [(s/valid? #(< 0 %) eid)]}
+  (.log js/console (cljs.pprint/pprint (s/explain-data :widget/widget (eid->map eid))))
+  (om/build f eid {:react-key eid}))
+
+(defn make-all [f eids]
+  {:pre [(s/valid? :widget/content eids)]}
+  (map (partial make f) eids))
 
 (defprotocol Widget
   (children   [this])
@@ -50,7 +66,7 @@
 (deftemplate grid "grid.html"
   [{:keys [:grid/data :grid/content]}]
   {#_#_[:.mdl-debug] (k/content (str content))
-   [:.mdl-grid] (k/content (u/make-all widgets (map :db/id content)))})
+   [:.mdl-grid] (k/content (make-all widgets (map :db/id content)))})
 
 (deftemplate header "header.html"
   [{:keys [:header/title :header/content]}]
@@ -58,7 +74,7 @@
 
 (deftemplate header-drawer "header-drawer.html"
   [{:keys [:header-drawer/title :header-drawer/content]}]
-  {[:nav] (k/content (u/make-all widgets (map :db/id content)))})
+  {[:nav] (k/content (make-all widgets (map :db/id content)))})
 
 (deftemplate link "link.html"
   [{:keys [:link/text :link/icon :link/href]}]
@@ -79,7 +95,7 @@
 
 (deftemplate page "page.html"
   [{:keys [page/content]}]
-  {[:.mdl-layout] (k/content (u/make-all widgets (map :db/id content)))})
+  {[:.mdl-layout] (k/content (make-all widgets (map :db/id content)))})
 
 (deftemplate register-card "register-card.html"
   [{{:keys [:db/id :temp/user :temp/email :temp/password]} :register-card/temp}]
@@ -138,4 +154,4 @@
   (reify
     om/IRender
     (render [this]
-      (u/make widgets (db/get-widget :widget/page)))))
+      (make widgets (db/get-widget :widget/page)))))
