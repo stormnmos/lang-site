@@ -5,10 +5,16 @@
 (set-env!
  :repositories
  #(conj %
-        ["datomic"
-         (merge {:url "https://my.datomic.com/repo"}
-                (:datomic (gpg-decrypt
-                           (File. (boot.App/bootdir) "credentials.edn.gpg"))))]))
+        ["my.datomic.com"
+         {:url "https://my.datomic.com/repo"
+          :username "storm.jeremy@gmail.com"
+          :password "8dc5ba78-c808-4c8b-800b-13bfbcf8927e"}])
+
+ #_#(conj % ["datomic"
+           (merge {:url "https://my.datomic.com/repo"}
+                  (:datomic
+                   (gpg-decrypt
+                    (File. (boot.App/bootdir) "credentials.edn.gpg"))))]))
 
 (set-env!
  :source-paths #{"less" "src/clj" "src/cljc" "src/cljs"}
@@ -71,7 +77,8 @@
                 "datomic:couchbase://localhost:4334/datomic/lang-site/?password=password"
                 :schema-file "resources/data/lang-site-schema.edn"
                 :sentence-file "resources/data/sentences.csv"
-                :links-file "resources/data/links.csv"}}
+                :links-file "resources/data/links.csv"
+                :tags-file "resources/data/tags.csv"}}
  reload {:on-jsload 'lang-site.core/on-js-reload}
  serve {:dir "target"
         :httpkit true

@@ -4,10 +4,16 @@
             [lang-site.util :as u]))
 
 (defn pba-e [att v]
-  "Pull by attribute, entity"
+  "Pull entity by attribute"
   (d/q '[:find ?e .
          :in $ ?att ?v
          :where [?e ?att ?v ]]
+       (d/db conn) att v))
+
+(defn pba-es [att v]
+  (d/q '[:find ?e
+         :in $ ?att ?v
+         :where [?e ?att ?v]]
        (d/db conn) att v))
 
 (defn pull-by-sentence-id [s-id]
@@ -24,7 +30,7 @@
 
 (defn find-links []
   (d/q '[:find ?a
-         :where [_ :translation/group ?a]]
+         :where [_ :sentence/group ?a]]
        (d/db conn)))
 
 (defn find-links-pull []

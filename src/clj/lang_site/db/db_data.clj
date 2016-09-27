@@ -3,6 +3,7 @@
    [lang-site.util :as u]
    [lang-site.db.transaction-templates :as tt]
    [lang-site.db.queries :as q]
+   [lang-site.state :refer [conn tx-chan]]
    [datomic.api :as d]
    [environ.core :refer [env]]
    [clojure.string :as str :only split]
@@ -15,33 +16,56 @@
 (defn split-by-tab [s]
   (str/split s #"\t"))
 
-#_(def rdr-s (clojure.java.io/reader (env :sentence-file)))
-#_(def rdr-l (clojure.java.io/reader (env :links-file)))
+(def rdr-s (clojure.java.io/reader (env :sentence-file)))
+(def rdr-l (clojure.java.io/reader (env :links-file)))
+#_(def rdr-t (clojure.java.io/reader (env :tags-file)))
 
-(defn sentence-ids->db-ids [state ids]
-  (map #(q/pba-e (u/get-db state) :sentence/id (read-string %)) ids))
+(def schema-tx (read-string (slurp "/home/storm/clojure/lang-site/resources/data/lang-site-schema.edn")))
 
-(defn process-link-line [state line]
+(defn tag->datomic [line]
+  (->> line
+       (split-by-tab)))
+
+(defn sentence-id->db-id [id]
+  (q/pba-e :sentence/id (read-string id)))
+
+(defn sentence-ids->db-ids [ids]
+  (map #(q/pba-e :sentence/id (read-string %)) ids))
+
+(defn process-link-line [line]
   (->> line
        (split-by-tab)
-       (sentence-ids->db-ids state)
-       (filter int?)))
+       (sentence-ids->db-ids)
+       (filter int?)
+       (map (partial d/entity (d/db conn)))
+       (mapv d/touch)))
 
-(defn link-to-datomic [state tx-chan line]
-  (let [eids (process-link-line state line)]
-    (if (>= (count eids) 2)
-      (->> eids
-           (tt/links-template)
-           (put! tx-chan)))))
+(defn entities->link [entities n]
+  (->> n
+       (nth entities)
+       ((juxt :db/id :sentence/group))
+       (apply tt/link)))
 
-(defn sentence-to-datomic [state line]
+(defn link-to-datomic [line]
+  (let [entities (process-link-line line)]
+    (->> (case (->> entities (map :sentence/group) (filter true?) count)
+           0 (->> entities (map :db/id) (tt/links-template))
+           1 (if (->> entities second :sentence/group)
+               (entities->link entities 0) (entities->link entities 1))
+           2 (when (not= (-> entities (nth 0) :sentence/group)
+                         (-> entities (nth 1) :sentence/group))
+               (->> entities second :sentence/group (q/pba-es :sentence/group)
+                    (tt/change-sentence-group (:sentence/group (first entities))))))
+         (async/>!! tx-chan))))
+
+(defn sentence-to-datomic [line]
   (->> line
        (split-by-tab)
-       (tt/sentence-template)
-       (put! (:tx-chan state))))
+       (tt/sentence)
+       (async/>!! tx-chan)))
 
-#_ (defn transact-links [state]
-  (run! #(link-to-datomic state %) (line-seq rdr-l)))
+(defn transact-links []
+  (run! link-to-datomic (line-seq rdr-l)))
 
-#_ (defn transact-sentences []
+(defn transact-sentences []
   (run! sentence-to-datomic (line-seq rdr-s)))

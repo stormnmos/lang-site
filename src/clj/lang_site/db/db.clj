@@ -19,9 +19,10 @@
   :type)
 
 (defmethod validate-tx :sentence [{{lang :sentence/language :as tx} :tx}]
-  (if (or (= lang :sentence.language/eng) ; only support tur and english
+  #_(if (or (= lang :sentence.language/eng) ; only support tur and english
           (= lang :sentence.language/tur))
-    tx))
+      tx)
+  tx)
 
 (defmethod validate-tx :link [{tx :tx}]
   tx)
